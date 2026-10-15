@@ -1,0 +1,62 @@
+<!-- pages/commission/detail.wxml —— 排单详情 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <view class="card">
+    <view class="d-head">
+      <view class="d-title">{{c.productName}}</view>
+      <view class="tag {{ddlStatus==='over'?'badge-danger':(ddlStatus==='warn'?'badge-warning':(ddlStatus==='done'?'badge-ok':'badge-normal'))}}">{{ddlStatus==='over'?'已超期':(ddlStatus==='warn'?'临近截止':(ddlStatus==='done'?'已完成':(ddlStatus==='cancelled'?'已取消':'正常')))}}</view>
+    </view>
+    <view class="d-row"><text class="k">委托方</text><text class="v">{{c.client}}</text></view>
+    <view class="d-row"><text class="k">数量</text><text class="v">{{c.qty}}（已交 {{c.deliveredQty}} · 余 {{remain}}）</text></view>
+    <view class="d-row"><text class="k">交付截止</text><text class="v">{{c.deadline}}{{ddlStatus==='over'?'（已超 '+daysLeft+' 天）':(daysLeft>=0?'（剩 '+daysLeft+' 天）':'')}}</text></view>
+    <view class="d-row" wx:if="{{c.price}}"><text class="k">单价</text><text class="v">¥{{c.price}}</text></view>
+    <view class="d-row" wx:if="{{c.remark}}"><text class="k">备注</text><text class="v">{{c.remark}}</text></view>
+    <view class="d-row"><text class="k">状态</text><text class="v">{{c.statusText}}</text></view>
+  </view>
+
+  <view class="link-card" wx:if="{{c.productId}}" bindtap="goProduct">
+    <text>查看关联成品《{{c.productName}}》</text><text class="arrow">›</text>
+  </view>
+
+  <view wx:if="{{c.deliverLogs.length}}" class="card">
+    <view class="sec-head" bindtap="toggleDeliver">
+      <view class="section-title">交付记录<text class="sub">{{c.deliverLogs.length}} 次</text></view>
+      <view class="collapse-arrow">{{deliverExpanded ? '收起' : '展开'}}</view>
+    </view>
+    <view wx:for="{{c.deliverLogs}}" wx:key="idx" wx:if="{{deliverExpanded || index < 2}}" class="sale-row">
+      <text class="sale-q">-{{item.qty}}</text>
+      <!-- V149：交付来源要看得见 —— 「在库」= 早做好的货（不扣料），「现做」= 现做现交（扣料） -->
+      <text class="sale-src {{item.fromStock==='product'?'src-stock':''}}">{{item.fromStock==='product'?'在库':(item.fromStock?'现做':'旧记录')}}</text>
+      <text class="sale-d">{{item.date}}</text>
+      <text class="sale-del" data-idx="{{item.idx}}" catchtap="undoDeliver">撤销</text>
+    </view>
+    <view wx:if="{{!deliverExpanded && c.deliverLogs.length > 2}}" class="expand-tip" bindtap="toggleDeliver">展开全部 {{c.deliverLogs.length}} 次 ›</view>
+    <view wx:if="{{deliverExpanded && c.deliverLogs.length > 2}}" class="expand-tip" bindtap="toggleDeliver">收起</view>
+    <view class="t-caption">误交付可撤销（自动回滚账目）</view>
+  </view>
+
+  <!-- V137 修（用户真机反馈「按钮为什么高度这么窄」）：
+       全局 `.btn` **只给圆角与左右内边距、不给高度**，高度**全靠尺寸类**（btn-large/medium/small）。
+       本页原先五个按钮**都没写尺寸类** ⇒ 高度塌成文字那么高（截图里那条细棕带）。
+       另：原先用的 `btn-ghost` / `btn-danger-ghost` 全项目**只在设置页清单编辑器里定义过**（页面级）
+       ⇒ 在本页等于没样式、渲染成纯文字。现统一改用全局标准类 + `btn-medium`（72rpx），
+       与灵感详情 / 物料详情 / 成品详情完全一致。 -->
+  <view class="actions">
+    <view class="btn btn-primary btn-medium btn-block" wx:if="{{canDeliver}}" bindtap="deliver">交付出库</view>
+    <view class="btn btn-secondary btn-medium btn-block" wx:if="{{!isCancelled && !isDone}}" bindtap="cancel">取消排单</view>
+    <view class="btn btn-secondary btn-medium btn-block" wx:if="{{isCancelled}}" bindtap="resume">恢复排单</view>
+    <view class="btn btn-secondary btn-medium btn-block" bindtap="goEdit">编辑</view>
+    <view class="btn btn-danger btn-medium btn-block" bindtap="remove">删除</view>
+  </view>
+
+  <!-- V149：交付弹窗（与排单列表页左滑「快速交付」共用同一个组件、同一套流程） -->
+  <deliver-sheet
+    show="{{showDeliver}}"
+    remain="{{remain}}"
+    stock="{{stock}}"
+    needCut="{{deliverNeedCut}}"
+    bind:close="closeDeliver"
+    bind:submit="onDeliverSubmit"
+  />
+</view>

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "想做清单",
+  "usingComponents": {
+    "ph-input": "/components/ph-input/ph-input"
+  }
+}

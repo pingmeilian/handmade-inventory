@@ -1,0 +1,226 @@
+/* pages/products/list.wxss —— 作品集总库 */
+.page-wrap { padding: var(--page-margin); padding-bottom: 160rpx; min-height: 100vh; background: var(--color-bg); box-sizing: border-box; }
+
+/* ⚠️ 2026-10-04：原先这里有一排「空间切换胶囊」（样式在 app.wxss 的 .topbar）已删 ——
+   切换只留在看板。 */
+
+/* 顶部工具条：筛选 → 搜索框 → 鸟瞰，中间搜索框撑满，两端按钮按内容小宽 */
+.toolbar { display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-md); }
+.toolbar > .search-wrap { flex: 1; min-width: 0; }
+.toolbar > .filter-btn, .toolbar > .view-toggle { flex: none; }
+.filter-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8rpx;
+  height: var(--input-sm); padding: 0 24rpx; background: var(--color-surface-2);
+  border-radius: var(--radius-pill); font-size: 26rpx; color: var(--color-text-2);
+}
+.filter-badge {
+  min-width: 32rpx; height: 32rpx; line-height: 32rpx; text-align: center;
+  background: var(--color-band-ink, var(--color-primary)); color: var(--color-band-ink-on, var(--color-primary-on)); border-radius: 999rpx;
+  font-size: 20rpx; padding: 0 8rpx;
+}
+.search-wrap { min-width: 0; }
+.top-search {
+  width: 100%;
+  height: var(--input-sm); min-height: var(--input-sm); line-height: var(--input-sm);
+  background: var(--color-surface-2); border-radius: var(--radius-pill);
+  padding: 0 28rpx; font-size: 26rpx; color: var(--color-text-1);
+}
+.view-toggle {
+  height: var(--input-sm); line-height: var(--input-sm); padding: 0 24rpx; text-align: center;
+  background: var(--color-surface-2); border-radius: var(--radius-pill);
+  font-size: 26rpx; color: var(--color-text-2);
+}
+
+/* 二级 Tab：左侧独立按钮【作品集】 + 右侧长条胶囊（商品 / 样品） */
+.cat-bar { display: flex; align-items: center; gap: 16rpx; margin-bottom: 16rpx; }
+.cat-standalone {
+  flex: none; height: 66rpx; line-height: 66rpx; padding: 0 32rpx; box-sizing: border-box;
+  background: var(--color-surface); color: var(--color-text-2);
+  border-radius: var(--radius-pill); font-size: 28rpx; border: 1rpx solid var(--color-divider);
+}
+.cat-standalone.on { background: var(--color-band-ink, var(--color-primary)); color: var(--color-band-ink-on, var(--color-primary-on)); border-color: var(--color-band-ink, var(--color-primary)); font-weight: 600; }
+
+.cat-capsule {
+  flex: 1; display: flex; gap: 6rpx;
+  background: var(--color-surface-2); border-radius: var(--radius-pill); padding: 6rpx;
+}
+.cat-cap {
+  flex: 1; height: var(--chip-h); line-height: var(--chip-h); text-align: center; box-sizing: border-box;
+  color: var(--color-band-ink, var(--color-text-2)); border-radius: var(--radius-pill); font-size: 28rpx;
+}
+.cat-cap.on { background: var(--color-surface); color: var(--color-primary-deep); font-weight: 600; box-shadow: var(--shadow-card); }
+
+/* 子分段：待售 | 已售（仅商品激活时显示，半高、紧贴主分段） */
+.cat-sub { display: flex; gap: 16rpx; margin-bottom: 20rpx; }
+.cat-sub-seg {
+  flex: 1; height: 50rpx; line-height: 50rpx; text-align: center;
+  background: var(--color-surface-2); color: var(--color-text-2);
+  border-radius: var(--radius-pill); font-size: 25rpx; border: 1rpx solid var(--color-divider);
+}
+.cat-sub-seg.on { background: var(--color-band-ink, var(--color-primary)); color: var(--color-band-ink-on, var(--color-primary-on)); border-color: var(--color-band-ink, var(--color-primary)); font-weight: 600; }
+
+/* 遮罩 + 筛选弹层 */
+.mask { position: fixed; inset: 0; background: var(--color-mask); z-index: 100; }
+/* 仅数量面板用居中变体，不影响底部弹层（长按菜单 / 筛选） */
+.mask-center { display: flex; align-items: center; justify-content: center; }
+.filter-panel {
+  position: absolute; top: 0; left: 0; right: 0; max-height: 80vh;
+  background: var(--color-surface); border-radius: 0 0 24rpx 24rpx; padding: 28rpx 28rpx 40rpx;
+  box-shadow: var(--shadow-card); overflow-y: auto;
+}
+.fp-title { font-size: 30rpx; font-weight: 600; color: var(--color-text-1); margin-bottom: 18rpx; }
+.fp-feedback { font-size: 24rpx; color: var(--color-primary-deep); margin-bottom: 8rpx; }
+.fp-label { font-size: 26rpx; color: var(--color-text-3); margin: 18rpx 0 12rpx; }
+.chips { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.chip {
+  display: inline-flex; align-items: center;
+  padding: 12rpx 26rpx; background: var(--color-surface-2); border-radius: var(--radius-pill);
+  font-size: 26rpx; color: var(--color-text-2); border: 2rpx solid transparent;
+}
+.chip.on { background: var(--color-primary); color: var(--color-primary-on); border-color: var(--color-primary); font-weight: 600; }
+.chip-check { font-size: 22rpx; margin-left: 6rpx; }
+
+/* 排序列表：每行两个相反方向 */
+.sort-list { display: flex; flex-direction: column; gap: 12rpx; }
+.sort-row { display: flex; gap: 12rpx; }
+.sort-cell {
+  flex: 1; display: flex; align-items: center; justify-content: space-between;
+  padding: 22rpx 24rpx; background: var(--color-surface-2); border-radius: var(--radius-inner);
+  font-size: 28rpx; color: var(--color-text-2);
+}
+.sort-cell.on { background: var(--color-primary); color: var(--color-primary-on); font-weight: 600; }
+.sort-check { font-size: 24rpx; }
+
+.fp-empty { font-size: 24rpx; color: var(--color-text-3); padding: 8rpx 0; }
+.fp-actions { display: flex; gap: 20rpx; margin-top: 30rpx; }
+.fp-btn { flex: 1; text-align: center; padding: 22rpx 0; border-radius: var(--radius-btn); font-size: 30rpx; }
+.fp-btn.ghost { background: var(--color-surface-2); color: var(--color-text-2); }
+.fp-btn.primary { background: var(--color-primary); color: var(--color-primary-on); }
+
+/* 统计行 */
+.summary { font-size: 26rpx; color: var(--color-band-ink, var(--color-text-3)); padding: 8rpx 8rpx 4rpx; }
+
+/* 列表卡片：统一列表卡片样式由 app.wxss 提供；本页作品集改为左右分栏 */
+/* V116b：去掉自带的上边距 —— 它紧跟在固定带后面，上边距会把分界线下面那半撑宽，
+   界线就不在两行字中间了（留白统一由 .page-wrap.pin-page 的顶部内边距给）。 */
+.list { margin-top: 0; }
+.card-pc { font-size: 22rpx; color: var(--color-text-3); margin-top: 4rpx; }
+
+/* 作品集左标题：仅本页允许长名称折两行，收紧行距；外框/左图文高度不变 */
+.std-title {
+  white-space: normal;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* 作品集卡片左右分栏：左栏与另外三页完全一致，右栏放「在库构成」 */
+.std-left { display: flex; align-items: center; flex: 1 1 0; min-width: 0; }
+.std-right {
+  flex: 0 0 260rpx; min-width: 0; margin-left: 20rpx;
+  display: flex; flex-direction: column; justify-content: center;
+  align-items: stretch;
+}
+
+/* 在库构成（商品 | 样品）：右栏整体垂直居中，与左图文中线对齐；色块饱满厚实 */
+.std-dual-label { font-size: 20rpx; color: var(--color-text-3); line-height: 1.3; margin-bottom: 8rpx; text-align: center; }
+.std-dual {
+  display: flex; align-items: stretch;
+  height: 72rpx; border-radius: 12rpx; overflow: hidden;
+  background: var(--color-surface-2);
+}
+.std-dual-side {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.std-dual-side.merch { background: rgba(143,178,126,0.14); }
+.std-dual-side.sample { background: rgba(224,162,107,0.12); }
+.std-dual-badge { font-size: 20rpx; line-height: 1; color: var(--color-success); }
+.std-dual-side.sample .std-dual-badge { color: var(--color-warning); }
+.std-dual-num { font-size: 26rpx; font-weight: 600; line-height: 1; margin-top: 4rpx; color: var(--color-text-1); }
+.std-dual-sep { width: 2rpx; background: var(--color-divider); }
+
+/* 单性质（商品待售 / 样品）：右栏竖向排列 */
+.std-single { display: flex; flex-direction: column; align-items: flex-end; gap: 8rpx; }
+.badge { font-size: 20rpx; padding: 4rpx 14rpx; border-radius: var(--radius-pill); line-height: 1.2; }
+.badge.merch { background: rgba(143,178,126,0.18); color: var(--color-success); }
+.badge.sample { background: rgba(224,162,107,0.16); color: var(--color-warning); }
+.meta { font-size: 22rpx; color: var(--color-text-2); text-align: right; }
+/* 待售：徽标旁边带上待售件数（原来只有价格和利润，看不出有几件） */
+.std-merch-head { display: flex; align-items: center; gap: 10rpx; }
+.std-qty { font-size: 26rpx; font-weight: 600; color: var(--color-primary-deep); }
+
+/* 已售历史行 */
+.sale-meta { font-size: 22rpx; color: var(--color-success); margin-top: 8rpx; }
+
+/* 鸟瞰网格 */
+.grid { display: flex; flex-wrap: wrap; gap: 18rpx; margin-top: 12rpx; }
+.cell { width: calc((100% - 36rpx) / 3); background: var(--color-surface); border-radius: var(--radius-card); padding: 12rpx; box-shadow: var(--shadow-card); }
+.cell-img { width: 100%; height: 180rpx; border-radius: var(--radius-inner); background: var(--color-surface-2); }
+/* 鸟瞰网格缩略图：无图时用全局 .ph-fill 的底色 + 首字淡印，这里仅放大首字 */
+.cell-img.ph-fill { font-size: 64rpx; }
+.cell-name { font-size: 24rpx; color: var(--color-text-1); margin-top: 10rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cell-badge { display: inline-block; margin-top: 8rpx; font-size: 20rpx; padding: 4rpx 12rpx; border-radius: var(--radius-pill); }
+.cell-badge.merch { background: rgba(143,178,126,0.18); color: var(--color-success); }
+.cell-badge.sample { background: rgba(224,162,107,0.16); color: var(--color-warning); }
+.cell-badge.sold { background: rgba(157,184,194,0.18); color: var(--color-info); }
+
+.empty { text-align: center; color: var(--color-text-3); font-size: 26rpx; padding: 80rpx 40rpx; }
+
+/* 长按菜单 */
+/* V141：本页是 **tab 页**（作品集）⇒ 底部还要避开 tabBar，否则菜单最下面的「取消」被压在
+   底部导航栏底下（同 V140 那个"自定义日期"弹层的毛病）。--tabbar-h 由 theme-page 注入。 */
+.action-sheet {
+  position: absolute; bottom: 0; left: 0; right: 0; background: var(--color-surface);
+  border-radius: 28rpx 28rpx 0 0;
+  padding: 16rpx 0 calc(32rpx + env(safe-area-inset-bottom) + var(--tabbar-h, 0px));
+}
+.as-title { text-align: center; font-size: 28rpx; color: var(--color-text-3); padding: 18rpx 0; }
+.as-item { text-align: center; font-size: 32rpx; color: var(--color-text-1); padding: 30rpx 0; border-top: 2rpx solid var(--color-divider); }
+.as-cancel { text-align: center; font-size: 32rpx; color: var(--color-text-3); padding: 30rpx 0; margin-top: 12rpx; }
+
+/* 数量输入面板：居中卡片 + 上抬 20vh，避免被键盘遮挡（配合 input 的 adjust-position=false） */
+.qty-panel {
+  width: 80%; max-width: 560rpx; background: var(--color-surface);
+  border-radius: var(--radius-card); padding: 40rpx 32rpx; box-sizing: border-box;
+  box-shadow: 0 12rpx 40rpx rgba(0,0,0,0.12); margin-bottom: 20vh;
+}
+.qty-title { font-size: 30rpx; color: var(--color-text-1); margin-bottom: 20rpx; text-align: center; font-weight: 600; }
+/* 数量输入框：加高 + 大字号 + 无边框浅米底（height=line-height 保证文字垂直居中） */
+.qty-input {
+  height: 96rpx; line-height: 96rpx; padding: 0 24rpx; box-sizing: border-box;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-inner); font-size: 36rpx; font-weight: 500;
+  text-align: center; color: var(--color-text-1);
+}
+.qty-actions { display: flex; gap: 20rpx; margin-top: 24rpx; }
+/* 「这批实际用料」编辑区（2026-09-27 V74）：默认按 BOM 每件用量，只改要改的行。
+   收纳在数量面板里（默认收起）—— 大多数批次不改就是标准用量，不该多占地方。 */
+.usage-block { margin-top: 22rpx; border-top: 1rpx solid var(--color-divider); padding-top: 16rpx; text-align: left; }
+.usage-head { display: flex; align-items: center; justify-content: space-between; }
+.usage-title { font-size: 26rpx; color: var(--color-text-2); }
+.usage-toggle { font-size: 24rpx; color: var(--color-primary-deep); }
+.usage-list { margin-top: 8rpx; max-height: 46vh; overflow-y: auto; }
+/* 一行一块：主行（名称 + 规格 + 右侧控件），需要时下面再跟一行（合起来剪的长宽）。
+   2026-09-29 V77：行内从「一个输入框」变成「按行类型给不同控件」，所以拆成两段。 */
+.usage-row { padding: 12rpx 0; border-bottom: 1rpx solid var(--color-divider); }
+.usage-row:last-child { border-bottom: none; }
+.usage-line { display: flex; align-items: center; gap: 12rpx; }
+.usage-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.usage-name { font-size: 26rpx; color: var(--color-text-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.usage-spec { font-size: 22rpx; color: var(--color-text-3); margin-top: 2rpx; }
+/* ⚠️ ph-input 组件根节点自带 width:100%（components/ph-input/ph-input.wxss）。
+   裸放进 .usage-row 会撑满整行、把物料名挤成一列 —— 2026-09-28 真机就是这么崩的。
+   所以用这个定宽容器兜住：组件内部的 100% 从此只占这一格。 */
+.usage-input-wrap { flex: none; width: 192rpx; }
+.usage-input {
+  min-height: 68rpx; height: 68rpx; line-height: 68rpx; padding: 0 12rpx; box-sizing: border-box;
+  font-size: 28rpx; text-align: center; color: var(--color-text-1);
+}
+.usage-unit { font-size: 24rpx; color: var(--color-text-3); flex: none; min-width: 48rpx; }
+
+/* 2026-09-30 V92：「一件一件剪 / 合起来剪」那套控件已退场（有长宽的面料行归裁剪界面），
+   连同 .usage-cutmode / .cm-chip / .usage-merged / .usage-x 一起删掉 */
+.usage-tip { font-size: 22rpx; color: var(--color-text-3); margin-top: 8rpx; }

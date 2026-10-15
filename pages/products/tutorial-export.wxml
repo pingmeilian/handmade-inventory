@@ -1,0 +1,62 @@
+<!-- pages/products/tutorial-export.wxml —— 教程预览 + 导出 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap" wx:if="{{tut}}">
+  <view class="exp-head">
+    <view class="exp-title">{{tut.title || '教程预览'}}</view>
+    <view class="exp-sub">{{draft.name}} · 共 {{tut.steps.length}} 步</view>
+  </view>
+
+  <!-- 实时预览（与导出图文同款视觉） -->
+  <view class="card tut-preview">
+    <view wx:for="{{tut.steps}}" wx:key="index" class="pv-step">
+      <view class="pv-step-head">
+        <text class="pv-num">{{index+1}}</text>
+        <text class="pv-step-title">{{item.title || '未命名步骤'}}</text>
+      </view>
+      <view wx:if="{{item.body}}" class="pv-body">{{item.body}}</view>
+      <view wx:if="{{item.images.length}}" class="pv-imgs">
+        <view wx:for="{{item.images}}" wx:for-item="im" wx:for-index="ij" wx:key="path" class="pv-img-row" data-i="{{index}}" data-j="{{ij}}" bindtap="previewImage">
+          <image src="{{im.path}}" mode="aspectFill" class="pv-img" />
+          <view wx:if="{{im.remark}}" class="pv-remark">{{im.remark}}</view>
+        </view>
+      </view>
+      <view wx:if="{{item.mats.length}}" class="pv-mats">🧷 {{item.mats.join('、')}}</view>
+    </view>
+  </view>
+
+  <!-- 导出按钮 -->
+  <view class="card exp-actions">
+    <view class="section-title">导出教程</view>
+    <view class="exp-btn" bindtap="exportPdf">A4 PDF 工艺单</view>
+    <view class="exp-btn" bindtap="exportLong">竖版长图</view>
+    <view class="exp-btn" bindtap="exportSocial">3:4 自媒体配图</view>
+    <view class="exp-btn" bindtap="exportCsv">CSV 表格</view>
+    <!-- 第二段：微信要求转发必须由 TAP 手势直接触发，故导出完成后单独一个按钮（见 utils/share.js） -->
+    <block wx:if="{{lastFile}}">
+      <view class="t-min">{{lastFile.name}} 已生成</view>
+      <view class="exp-btn" bindtap="shareGenerated">转发 / 另存这个文件</view>
+    </block>
+  </view>
+
+  <view class="safe-bottom"></view>
+
+  <!-- 离屏画布（导出用，不参与布局） -->
+  <canvas type="2d" id="exportCanvas" class="exp-canvas"></canvas>
+
+  <!-- 自定义全屏图片预览：底部显示图片说明 -->
+  <view wx:if="{{imgPreview.show}}" class="img-preview-mask" bindtap="closeImgPreview">
+    <view class="img-preview-close" catchtap="closeImgPreview">✕</view>
+    <swiper class="img-preview-swiper" current="{{imgPreview.idx}}" bindchange="onPreviewChange" catchtap="noop">
+      <swiper-item wx:for="{{imgPreview.urls}}" wx:key="*this" class="img-preview-item">
+        <image src="{{item}}" mode="aspectFit" class="img-preview-img" />
+      </swiper-item>
+    </swiper>
+    <view class="img-preview-caption-wrap" catchtap="noop">
+      <text class="img-preview-caption">{{imgPreview.remark || '暂无说明'}}</text>
+      <text class="img-preview-counter">{{imgPreview.idx + 1}} / {{imgPreview.urls.length}}</text>
+    </view>
+  </view>
+</view>
+
+<view wx:else class="empty-tip">暂无教程内容</view>

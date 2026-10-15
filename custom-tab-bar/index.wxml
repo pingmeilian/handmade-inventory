@@ -1,0 +1,33 @@
+<!-- custom-tab-bar/index.wxml —— 自定义底部导航栏（V97：颜色跟着当前大类的主题走）
+     ⚠️ tabBar 是**独立组件树**，不在页面的 DOM 里 ⇒ 拿不到 page-meta 上的 CSS 变量。
+     所以颜色必须由组件自己读主题、用内联 style 传（见 index.js 的 pick()）。
+     这也是方案里点名的"漏点 1"：只换 CSS 变量的话，页面内容变了、底部这条没变，看着像坏了。 -->
+<view class="tabbar" style="background: {{th.barBg}}; border-top: 1rpx solid {{th.barLine}}; box-shadow: 0 -2rpx 10rpx {{th.barShadow}};">
+  <view
+    wx:for="{{list}}"
+    wx:key="idx"
+    class="tab-item {{item.action ? 'tab-action' : ''}} {{!item.action && selected === item.idx ? 'active' : ''}}"
+    data-idx="{{item.idx}}"
+    bindtap="onTap"
+  >
+    <block wx:if="{{item.action}}">
+      <view class="plus-circle" style="background: {{th.fab}}; color: {{th.fabOn}}; box-shadow: 0 6rpx 18rpx {{th.plusShadow}};">＋</view>
+    </block>
+    <block wx:else>
+      <view class="tab-icon ico-{{item.idx}}" style="background-color: {{selected === item.idx ? th.sel : th.unsel}};"></view>
+      <view class="tab-text" style="color: {{selected === item.idx ? th.sel : th.unsel}};">{{item.text}}</view>
+    </block>
+  </view>
+</view>
+
+<!-- 快速记录面板（中间加号点开） -->
+<view wx:if="{{panelShow}}" class="qmask" style="background: {{th.mask}};" bindtap="closePanel">
+  <view class="qsheet" catchtap="noop" style="background: {{th.sheetBg}};">
+    <view class="qsheet-title" style="color: {{th.sheetText}};">快速记录</view>
+    <view class="qrow">
+      <view class="qitem" wx:for="{{quickItems}}" wx:key="url"
+            data-url="{{item.url}}" bindtap="quickTap"
+            style="background: {{th.sheetInput}}; color: {{th.primary}};">{{item.label}}</view>
+    </view>
+  </view>
+</view>

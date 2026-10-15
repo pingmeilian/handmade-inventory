@@ -1,0 +1,10 @@
+/* pages/settings/about.wxss */
+/* V146：删掉 .about-title —— 它只服务「手工物料库存与成本核算」那行大字，
+   用户要求去掉（纯重复）。
+   .about-ver 原本有 10rpx 的 margin-top（用来与上面那行标题拉开距离），标题没了 ⇒ 一并去掉。 */
+.about-ver { font-size: 24rpx; color: var(--color-text-3); }
+.menu-row { display: flex; align-items: center; justify-content: space-between; min-height: 96rpx; }
+.row-arrow { color: var(--color-text-3); font-size: 36rpx; }
+.tip { text-align: center; margin-top: 16rpx; }
+/* 待转发备份卡片里的按钮（两段式清空流程的第二段入口） */
+.pending-btn { margin-top: 20rpx; }

@@ -1,0 +1,9 @@
+/* pages/settings/export.wxss */
+.exp-row { display: flex; align-items: center; justify-content: space-between; padding: 24rpx 0; }
+.exp-main { flex: 1; }
+.exp-name { display: block; font-size: 30rpx; font-weight: 600; color: var(--color-text-1); }
+.exp-sub { display: block; font-size: 22rpx; color: var(--color-text-3); margin-top: 6rpx; }
+
+.exp-actions { margin-top: 24rpx; }
+.exp-btn-row { display: flex; gap: 20rpx; margin-top: 20rpx; }
+.exp-btn-row .btn { flex: 1; }

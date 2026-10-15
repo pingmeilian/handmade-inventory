@@ -1,0 +1,92 @@
+<!-- pages/settings/backup.wxml —— 备份与恢复 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+
+  <!-- ☁️ 云端备份（P3.5）：让"数据在云端"这件事**看得见** ——
+       云端备份最怕的不是坏，而是"你以为它在工作，其实早就停了" -->
+  <view class="card">
+    <view class="section-title">☁️ 云端备份</view>
+    <block wx:if="{{!cloud.enabled}}">
+      <view class="t-min">云端备份尚未开放。你的数据保存在本机，本地备份与恢复照常可用，导出的备份文件也可以随时导回来。</view>
+    </block>
+    <block wx:else>
+      <view class="t-min">{{cloud.statusText}}</view>
+      <view class="t-min" wx:if="{{photo.enabled}}">图片同步：{{photo.statusText}}</view>
+
+      <block wx:if="{{cloud.backups.length}}">
+        <view class="t-min">云端现有 {{cloud.backups.length}} 个还原点：</view>
+        <view class="bp-rp" wx:for="{{cloud.backups}}" wx:key="slot">
+          <view class="bp-rp-info">
+            <view class="bp-rp-at">{{item.at}} · {{item.sizeText}}{{item.isLatest ? ' · 最新' : ' · 上一个'}}</view>
+            <view class="bp-rp-ago">{{item.ago}}</view>
+          </view>
+          <view class="bp-rp-btn" catchtap="doCloudRestoreSlot" data-slot="{{item.slot}}">恢复这份</view>
+        </view>
+      </block>
+
+      <view class="t-min">云端最多保留 2 个还原点（最新 + 上一个）。每次同步都是先写好、再切换，所以任何一次失败都不会覆盖已有备份。</view>
+      <view class="t-min">图片会另外传一份到云端（存图后自动排队，攒几张一次传）。你删本地图片不会删云端的那份 —— 万一误删还能找回。</view>
+      <view class="btn btn-primary btn-large btn-block bp-export" bindtap="doCloudSync" disabled="{{cloudBusy}}">
+        {{cloudBusy ? '处理中…' : '立即同步到云端'}}
+      </view>
+      <view class="btn btn-secondary btn-large btn-block bp-import" bindtap="doCloudRestore" disabled="{{cloudBusy || !cloud.backups.length}}">
+        从云端恢复（会覆盖本机数据）
+      </view>
+      <view class="t-min" wx:if="{{cloud.backups.length}}">上面那个按钮恢复的是「最新」那份；想回到更早的「上一个」，点它右边那行的「恢复这份」。</view>
+    </block>
+  </view>
+
+  <!-- 导出 -->
+  <view class="card">
+    <view class="section-title">① 备份（导出）</view>
+    <view class="mode-row">
+      <view class="mode {{mode === 'full' ? 'mode-on' : ''}}" data-mode="full" bindtap="pickMode">
+        <view class="mode-name">完整（推荐）</view>
+        <view class="mode-desc">数据 + 图片</view>
+      </view>
+      <view class="mode {{mode === 'light' ? 'mode-on' : ''}}" data-mode="light" bindtap="pickMode">
+        <view class="mode-name">轻量</view>
+        <view class="mode-desc">仅数据，不含图片</view>
+      </view>
+    </view>
+    <view class="t-min">生成后请点「转发这份备份」发到「文件传输助手」或电脑上保存（微信规定转发必须由你的点击触发，所以分成两步）。<text wx:if="{{imgUsage}}">当前图片 {{imgUsage.count}} 张{{imgUsage.usedText ? "，整个小程序文件空间已用 " + imgUsage.usedText + "（" + imgUsage.percent + "%）" : ""}}。</text></view>
+    <view class="btn btn-primary btn-large btn-block bp-export" bindtap="doExport" disabled="{{busy}}">
+      {{busy ? '打包中…' : '生成备份文件'}}
+    </view>
+    <view class="bp-last" wx:if="{{lastExported}}">
+      <view class="t-min">最近备份：{{lastExported.name}}（{{lastExported.sizeText}}{{lastExported.imagesCount ? '，含图片 ' + lastExported.imagesCount + ' 张' : ''}}）</view>
+      <view class="ck-rerun" bindtap="shareLast">↻ 转发这份备份（发到微信保存）</view>
+    </view>
+  </view>
+
+  <!-- 导入 -->
+  <view class="card">
+    <view class="section-title">② 恢复（导入）</view>
+    <view class="t-min">从微信聊天记录里选择之前保存的备份文件。恢复会<b>覆盖</b>当前全部数据 —— 当前数据会先自动留一份内部快照（见下方），恢复错了也能退回来。</view>
+    <view class="btn btn-secondary btn-large btn-block bp-import" bindtap="doImport" disabled="{{importing}}">
+      {{importing ? '恢复中…' : '从聊天记录选择备份文件'}}
+    </view>
+  </view>
+
+  <!-- 内部快照（三保险） -->
+  <view class="card">
+    <view class="section-title">安全快照（最近 {{snapshots.length}}/3 份）</view>
+    <view class="t-min" wx:if="{{snapshots.length === 0}}">还没有快照。每次「恢复数据」或「清空数据」之前会自动生成一份，弄错了可以从这里退回来。</view>
+    <view class="bp-snap" wx:for="{{snapshots}}" wx:key="id">
+      <view class="bp-snap-info">
+        <view class="bp-snap-reason">{{item.reason}}</view>
+        <view class="t-min">{{item.at}} · {{item.keys}} 组数据</view>
+      </view>
+      <view class="bp-snap-btn" data-id="{{item.id}}" bindtap="restoreSnapshot">恢复</view>
+    </view>
+  </view>
+
+  <!-- 图片空间 -->
+  <view class="card" wx:if="{{imgUsage}}">
+    <view class="section-title">图片空间</view>
+    <view class="t-min">当前图片 {{imgUsage.count}} 张，整个小程序文件空间已用 {{imgUsage.usedText}}（{{imgUsage.percent}}%）。新存的图会自动压缩；老图不压缩很占地方。删除物料/成品后图片会留在原地变成「无主图」——用下面的工具找回空间。</view>
+    <view class="btn btn-secondary btn-large btn-block bp-export" bindtap="doCleanOrphans" disabled="{{busy}}">清理无主图片</view>
+  </view>
+
+</view>

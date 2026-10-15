@@ -1,0 +1,47 @@
+<!-- pages/want/detail.wxml —— 想做详情 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap" wx:if="{{item}}">
+  <view class="card">
+    <view class="d-title">{{item.title}}</view>
+    <view class="status-pill {{done?'on':''}}">{{done?'已完成':'待填坑'}}</view>
+
+    <view wx:if="{{item.link}}" class="desc-block">
+      <view class="blk-label">外部视频链接</view>
+      <!-- user-select 让链接可长按选择/复制：万一系统剪贴板写入失败，用户还能手动兜底 -->
+      <text class="d-link" user-select="{{true}}">{{item.linkShown}}</text>
+      <view class="link-tags">
+        <view wx:if="{{sourceTag}}" class="src-tag">{{sourceTag}}</view>
+        <!-- 存的链接不可用时要明说，别让用户点了按钮才发现 -->
+        <view wx:if="{{item.linkBad}}" class="link-bad">链接格式异常，点击会提示修改</view>
+      </view>
+    </view>
+
+    <view wx:if="{{item.desc}}" class="desc-block">
+      <view class="blk-label">个人备注</view>
+      <view class="desc">{{item.desc}}</view>
+    </view>
+
+    <view wx:if="{{item.photos.length}}" class="desc-block">
+      <view class="blk-label">附件图片</view>
+      <view class="photo-grid">
+        <view class="photo" wx:for="{{item.photos}}" wx:key="*this" data-url="{{item}}" bindtap="previewPhoto">
+          <image class="photo-img" src="{{item}}" mode="aspectFill" />
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{item.createdAt}}" class="meta-line">创建于 {{item.createdAt}}</view>
+  </view>
+
+  <!-- V137 修（用户真机反馈「按钮为什么高度这么窄」）：本页四个按钮原先都**没写尺寸类**
+       ⇒ 全局 `.btn` 不给高度、高度全靠尺寸类 ⇒ 塌成文字那么高；次要按钮用的
+       `btn-ghost` / `btn-danger-ghost` 又是**别页才定义**的类 ⇒ 直接渲染成纯文字。
+       现统一 `btn-medium`（72rpx）+ 全局标准类，与其它详情页一致。 -->
+  <view class="actions">
+    <view class="btn btn-primary btn-medium btn-block" bindtap="goVideo">前往原视频</view>
+    <view class="btn btn-secondary btn-medium btn-block" bindtap="goEdit">编辑</view>
+    <view class="btn {{done?'btn-disabled':'btn-secondary'}} btn-medium btn-block" bindtap="openConvert">{{done?'已填坑':'转为成品'}}</view>
+    <view class="btn btn-danger btn-medium btn-block" bindtap="remove">删除</view>
+  </view>
+</view>

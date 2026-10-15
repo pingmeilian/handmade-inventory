@@ -1,0 +1,9 @@
+{
+  "name": "photoIndex",
+  "version": "1.0.0",
+  "description": "云端图片清单 —— 记录每个人的图片文件在哪（客户端不能列目录，只能问它）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

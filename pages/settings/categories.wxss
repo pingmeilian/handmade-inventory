@@ -1,0 +1,44 @@
+/* pages/settings/categories.wxss */
+.cat-card {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--color-surface); border-radius: var(--radius-card);
+  padding: 28rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-card);
+}
+.cat-main { flex: 1; }
+.cat-name { font-size: 30rpx; font-weight: 600; color: var(--color-text-1); }
+.cat-count { display: block; font-size: 22rpx; color: var(--color-text-3); margin-top: 8rpx; }
+.cat-ops { display: flex; align-items: center; gap: 28rpx; }
+.op { font-size: 26rpx; color: var(--color-primary); }
+.op.danger { color: var(--color-danger); }
+.tip { text-align: center; margin-top: 20rpx; }
+
+/* ===== 主题（V97）===== */
+/* 色条：用该套自己的三个色（浅底/主色/点缀），一眼看出这套长什么样 */
+.theme-dot {
+  width: 60rpx; height: 36rpx; border-radius: 8rpx;
+  display: flex; overflow: hidden; flex: none;
+  border: 2rpx solid var(--color-divider);
+}
+.theme-mask {
+  position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+  background: var(--color-mask); z-index: 100;
+  display: flex; align-items: flex-end;
+}
+.theme-sheet {
+  width: 100%; background: var(--color-surface);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  padding: 32rpx 28rpx 60rpx; box-sizing: border-box;
+}
+.theme-sheet-title { display: block; font-size: 30rpx; font-weight: 600; color: var(--color-text-1); margin-bottom: 24rpx; }
+.theme-grid { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.theme-item {
+  width: calc((100% - 32rpx) / 3); box-sizing: border-box;
+  padding: 16rpx 10rpx 12rpx; border-radius: var(--radius-inner);
+  display: flex; flex-direction: column; align-items: center; gap: 10rpx;
+  border: 2rpx solid transparent;
+}
+.theme-item.on { border-color: var(--color-primary); background: var(--color-primary-soft); }
+.theme-swatch { width: 100%; height: 44rpx; border-radius: 10rpx; display: flex; overflow: hidden; }
+.theme-name { font-size: 22rpx; color: var(--color-text-2); }
+.theme-item.on .theme-name { color: var(--color-text-1); font-weight: 600; }
+.theme-hint { text-align: center; margin-top: 24rpx; }

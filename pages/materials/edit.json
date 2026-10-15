@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "物料编辑",
+  "usingComponents": {
+    "ph-input": "/components/ph-input/ph-input",
+    "picker-sheet": "/components/picker-sheet/picker-sheet"
+  }
+}

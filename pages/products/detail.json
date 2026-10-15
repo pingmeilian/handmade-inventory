@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "成品详情",
+  "usingComponents": {
+    "ph-input": "/components/ph-input/ph-input",
+    "date-picker-sheet": "/components/date-picker-sheet/date-picker-sheet"
+  }
+}

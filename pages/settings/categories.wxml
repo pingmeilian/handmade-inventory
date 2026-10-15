@@ -1,0 +1,52 @@
+<!-- pages/settings/categories.wxml —— 手作空间管理 -->
+<!-- V97：每个大类带一个主题（换大类 = 换外观）。主题变量落在页面根节点上。 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <view class="section-title">手作空间<text class="sub">每个空间各自管自己的库存</text></view>
+  <view class="cat-card" wx:for="{{list}}" wx:key="id">
+    <view class="cat-main">
+      <text class="cat-name">{{item.name}}</text>
+      <text class="cat-count">含 {{item.count}} 条数据 · {{item.themeName}}</text>
+    </view>
+    <view class="cat-ops">
+      <!-- 主题色条：点它换这个大类的外观。用该套自己的三个色作底，一眼看出长什么样 -->
+      <view class="theme-dot" data-id="{{item.id}}" bindtap="pickTheme">
+        <view style="flex:1;background:{{item.soft}}"></view>
+        <view style="flex:1;background:{{item.primary}}"></view>
+        <view style="flex:1;background:{{item.accent}}"></view>
+      </view>
+      <text class="op" data-id="{{item.id}}" bindtap="edit">重命名</text>
+      <text class="op danger" data-id="{{item.id}}" bindtap="remove">删除</text>
+    </view>
+  </view>
+  <view class="btn btn-primary btn-large btn-block" bindtap="add">+ 新建手作空间</view>
+  <!-- ⚠️ 2026-09-27：这句原先写「切换当前空间请在「物料库 → 分类管理」」，
+       但物料库页**没有**「分类管理」这个入口（顶部就是空间名胶囊，直接点选），
+       纯属指向不存在的路标；而且「分类管理」会与新的「物料分类」撞车 ——
+       用户会以为那是管分类的地方。守卫 tests/guard-naming.test.js ③ 盯着。
+       ⚠️ 2026-10-04 又改一次：物料库 / 作品集顶部的空间胶囊**已删**（切换只留「看板」一处）
+       ⇒ 指向「物料库顶部」这句**第二次失效**。
+       📌 教训：**改入口时要回头查"有没有别处还在指它"** —— 这类路标散落各处、
+          不会自己报错，只能人来点。守卫 tests/guard-naming.test.js ③ 已扩成"指向性检查"。 -->
+  <view class="t-min tip">切换空间请在「看板」页顶部直接点选</view>
+</view>
+
+<!-- 主题选择弹层（V97）：**点一下立刻生效**，可以直接来回比着挑（改的是外观，无破坏性） -->
+<view wx:if="{{themeFor}}" class="theme-mask" bindtap="closeTheme">
+  <view class="theme-sheet" catchtap="noop">
+    <view class="theme-sheet-title">「{{themeName}}」用什么主题</view>
+    <view class="theme-grid">
+      <view wx:for="{{themes}}" wx:key="key"
+            class="theme-item {{item.key === pickedTheme ? 'on' : ''}}"
+            data-key="{{item.key}}" bindtap="chooseTheme">
+        <view class="theme-swatch">
+          <view style="flex:1;background:{{item.soft}}"></view>
+          <view style="flex:1;background:{{item.primary}}"></view>
+          <view style="flex:1;background:{{item.accent}}"></view>
+        </view>
+        <text class="theme-name">{{item.name}}</text>
+      </view>
+    </view>
+    <view class="t-min theme-hint">点一下立刻生效，可以直接比着挑</view>
+  </view>
+</view>

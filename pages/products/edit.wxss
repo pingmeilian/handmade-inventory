@@ -1,0 +1,385 @@
+/* pages/products/edit.wxss —— 成品编辑 */
+
+/* 照片上传（复用物料编辑同款类名，样式已在 app.wxss 或局部均可） */
+.photo-wrap { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.photo-item { position: relative; width: 144rpx; height: 144rpx; border-radius: var(--radius-inner); overflow: hidden; }
+.photo-thumb { width: 100%; height: 100%; }
+.photo-del {
+  position: absolute; top: 0; right: 0; width: 40rpx; height: 40rpx;
+  background: var(--color-mask); color: #fff; font-size: 22rpx;
+  display: flex; align-items: center; justify-content: center;
+  border-bottom-left-radius: var(--radius-inner);
+}
+.photo-actions { width: 100%; display: flex; gap: 16rpx; }
+.photo-btn {
+  flex: 1; height: 120rpx; border-radius: var(--radius-inner);
+  border: 2rpx solid var(--color-primary);
+  background: var(--color-primary-soft); color: var(--color-primary-deep);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28rpx; font-weight: 600;
+}
+.photo-btn:active { background: var(--color-primary); color: var(--color-primary-on); }
+
+.bom-row { background: var(--color-surface); border: 1rpx solid var(--color-divider); border-radius: var(--radius-inner); padding: 20rpx; margin-bottom: 16rpx; }
+.bom-head { display: flex; align-items: center; gap: 16rpx; }
+.bom-thumb { width: 64rpx; height: 64rpx; border-radius: var(--radius-inner); flex: none; }
+/* 无图占位块：底色 / 首字墨色由内联 style 注入（占位居中走全局 .ph-fill） */
+.bom-thumb-placeholder.ph-fill { font-size: 26rpx; }
+.bom-thumb-empty {
+  width: 64rpx; height: 64rpx; border-radius: var(--radius-inner); flex: none;
+  background: var(--color-divider);
+}
+/* BOM 行：左半区「选择物料」做成浅按钮，点击唤起选择器；已选物料后回归卡片展示 */
+.bom-mat-wrap {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 16rpx;
+  padding: 10rpx 14rpx; border-radius: var(--radius-inner);
+  background: var(--color-surface-2); color: var(--color-text-1);
+}
+.bom-mat-wrap.placeholder {
+  background: var(--color-primary-soft); color: var(--color-primary-deep);
+  box-shadow: var(--shadow-card); justify-content: center;
+}
+.bom-mat-wrap.placeholder .bom-thumb-empty { display: none; }
+.bom-mat-wrap.bom-mat-press { background: var(--color-primary-soft); }
+.bom-mat-wrap.placeholder.bom-mat-press { background: var(--color-primary); color: var(--color-primary-on); }
+.bom-mat-text {
+  flex: 1; min-width: 0;
+  font-size: 28rpx; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bom-mat-wrap.placeholder .bom-mat-text {
+  font-weight: 600; text-align: center;
+}
+.bom-mat-arrow {
+  flex: none; font-size: 24rpx; color: var(--color-primary-deep); margin-left: 4rpx;
+}
+.bom-del { flex: none; width: 48rpx; height: 48rpx; line-height: 48rpx; text-align: center; color: var(--color-danger); font-size: 28rpx; }
+/* 非面料用量输入行：与上方「选择物料」按钮保持间距，避免贴在一起 */
+.bom-usage-row { margin-top: 16rpx; }
+
+/* 面料行：选中物料且长宽齐全后，行内独立的裁剪排版入口 */
+.bom-finish-row { margin-top: 16rpx; display: flex; justify-content: center; }
+.bom-finish-btn {
+  background: var(--color-primary-deep); color: var(--color-primary-on);
+  font-size: 26rpx; font-weight: 600;
+  padding: 16rpx 48rpx; border-radius: var(--radius-inner);
+  box-shadow: var(--shadow-btn);
+}
+.bom-finish-btn.disabled { background: var(--color-divider); color: var(--color-text-3); box-shadow: none; }
+.bom-2col { display: flex; gap: 16rpx; margin-top: 16rpx; }
+.bom-2col .field-control { flex: 1; }
+
+.cost-box { background: var(--color-surface-2); border-radius: var(--radius-inner); padding: 12rpx 24rpx; margin-top: 8rpx; }
+.cost-line { display: flex; align-items: center; justify-content: space-between; padding: 12rpx 0; border-bottom: 1rpx solid var(--color-divider); }
+.cost-line:last-child { border-bottom: none; }
+.cost-line .mono { font-size: 28rpx; font-weight: 600; color: var(--color-text-1); font-variant-numeric: tabular-nums; }
+
+.calc-box { margin-top: 24rpx; }
+.cost-hint { margin-top: 16rpx; }
+.calc-row { display: flex; align-items: center; gap: 16rpx; margin-top: 12rpx; }
+.calc-t { flex: 1; font-size: 24rpx; color: var(--color-text-2); }
+.calc-input { width: 160rpx; background: var(--color-surface-2); border-radius: var(--radius-inner); min-height: 48rpx; line-height: 20rpx; padding: 12rpx 18rpx; font-size: 24rpx; }
+
+.step-row { display: flex; align-items: center; gap: 16rpx; margin-bottom: 14rpx; }
+.step-input { flex: 1; background: var(--color-surface-2); border-radius: var(--radius-inner); min-height: 56rpx; line-height: 24rpx; padding: 16rpx 20rpx; font-size: 26rpx; }
+.step-del { flex: none; width: 48rpx; height: 48rpx; line-height: 48rpx; text-align: center; color: var(--color-danger); font-size: 28rpx; }
+
+/* BOM 物料选择器 */
+/* 选择物料：整屏弹窗（贴底，顶部留 12vh 可点遮罩关闭）
+   弹窗改 flex 纵向布局，列表区弹性吃满剩余高度 → 尽量多显示物料 */
+.mat-picker {
+  max-height: none;
+  height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;   /* 预览卡以它作定位参照 */
+}
+/* 标题里的长按提示：让「能长按」这件事被发现，否则没人知道有这功能 */
+.mat-tip { margin-left: 16rpx; font-size: 22rpx; font-weight: 400; color: var(--color-text-3); }
+
+/* ===== 长按预览卡 =====
+   松手即关，所以它只是「按住时的一层覆盖」。三个要点：
+   ① pointer-events:none —— 绝不抢手势，否则 touchend 收不到、预览关不掉
+   ② 锚在弹层顶部 —— 手指在下方列表里，顶部遮挡最少
+   ③ 属性最多 4 项、布片最多 6 片（数据层已限量）→ 内容高度可控，不需要滚动 */
+.mat-preview {
+  position: absolute; left: 32rpx; right: 32rpx; top: 36rpx; z-index: 20;
+  pointer-events: none;
+  /* 硬顶：将来数据层万一再长出内容，也不会超出弹层被裁掉（正常触不到） */
+  max-height: calc(88vh - 200rpx);
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 2rpx solid var(--color-primary);
+  border-radius: 20rpx;
+  padding: 24rpx 28rpx;
+  box-shadow: 0 12rpx 40rpx rgba(90, 70, 50, 0.22);
+}
+.mp-head { display: flex; align-items: center; gap: 12rpx; }
+.mp-name { font-size: 30rpx; font-weight: 600; color: var(--color-text-1); flex: 1; }
+.mp-cat { font-size: 22rpx; color: var(--color-text-3); flex: none; }
+.mp-low {
+  font-size: 20rpx; color: #fff; background: var(--color-danger);
+  border-radius: 16rpx; padding: 2rpx 12rpx; flex: none;
+}
+.mp-attrs { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 14rpx; }
+.mp-attr {
+  font-size: 22rpx; color: var(--color-text-2); background: var(--color-surface-2);
+  border-radius: 12rpx; padding: 4rpx 14rpx;
+}
+.mp-attr-more { color: var(--color-text-3); }
+.mp-kv { margin-top: 16rpx; }
+.mp-row { display: flex; align-items: baseline; margin-bottom: 8rpx; }
+.mp-k { font-size: 22rpx; color: var(--color-text-3); width: 76rpx; flex: none; }
+.mp-v { font-size: 24rpx; color: var(--color-text-1); flex: 1; }
+.mp-v-strong { font-weight: 600; color: var(--color-primary); }
+
+.mp-sub {
+  display: flex; align-items: baseline; gap: 12rpx;
+  margin-top: 16rpx; padding-top: 14rpx; border-top: 1rpx dashed var(--color-divider);
+  font-size: 22rpx; color: var(--color-text-2);
+}
+.mp-sub-more { font-size: 20rpx; color: var(--color-text-3); }
+.mp-pieces { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 12rpx; }
+.mp-piece {
+  width: calc(50% - 6rpx); box-sizing: border-box;
+  display: flex; align-items: center; gap: 8rpx;
+  border-radius: 12rpx; padding: 10rpx 14rpx;
+}
+.mp-piece.wh { background: #E6EFDD; border: 1rpx solid #A8B79E; }
+.mp-piece.off { background: #F6E7D6; border: 1rpx solid #C49A6C; }
+.mp-piece-size { font-size: 24rpx; color: var(--color-text-1); font-weight: 600; }
+.mp-piece-tag { font-size: 20rpx; color: var(--color-text-3); }
+.mp-piece-area { font-size: 20rpx; color: var(--color-text-3); margin-left: auto; }
+.mp-sum { margin-top: 12rpx; font-size: 22rpx; color: var(--color-text-2); }
+.mp-empty { margin-top: 16rpx; font-size: 22rpx; color: var(--color-text-3); }
+/* 标题 / 搜索 / 胶囊 / 底部按钮：固定高度，不参与拉伸 */
+.mat-picker .sheet-title,
+.mat-picker .mat-search-wrap,
+.mat-picker .mat-filter-bar,
+.mat-picker .sheet-ops { flex: none; }
+/* 列表区：height:0 + flex:1 是 scroll-view 在 flex 容器里可靠滚动的写法 */
+.mat-picker .mat-picker-body { flex: 1; height: 0; min-height: 0; }
+.mat-search-wrap { margin-bottom: var(--space-md); }
+.mat-search {
+  background: var(--color-surface-2); border-radius: var(--radius-inner);
+  min-height: var(--input-md); line-height: 32rpx; padding: 20rpx 24rpx; font-size: 28rpx;
+}
+/* 分类胶囊 Tab：横向滑动，与搜索框保持距离
+   （作为 flex item 显式给最小高度，避免 scroll-view 在纵向 flex 里高度塌陷） */
+.mat-filter-bar { white-space: nowrap; margin-bottom: 12rpx; padding: 2rpx 0; min-height: 64rpx; }
+.mat-filter-chip {
+  display: inline-block; padding: 8rpx 22rpx; margin-right: 10rpx; border-radius: 999rpx;
+  background: var(--color-primary-soft); color: var(--color-primary-deep); font-size: 24rpx;
+}
+.mat-filter-chip.active { background: var(--color-primary-deep); color: var(--color-primary-on); }
+.mat-group { margin-bottom: 16rpx; }
+.mat-group-title { font-size: 24rpx; color: var(--color-text-3); margin-bottom: 10rpx; }
+/* 物料选择器：横排卡片，与物料库列表同款观感（左缩略图 + 名称 / 余量·单价） */
+.mat-row {
+  display: flex; align-items: center; gap: 20rpx;
+  background: var(--color-surface-2); border-radius: var(--radius-inner);
+  padding: 16rpx; margin-bottom: 12rpx;
+}
+.mat-row:active { background: var(--color-primary-soft); }
+.mat-row-thumb { width: 92rpx; height: 92rpx; border-radius: var(--radius-inner); flex: none; }
+.mat-row-thumb.ph-fill { font-size: 40rpx; }
+.mat-row-body { flex: 1; min-width: 0; }
+.mat-row-name {
+  font-size: 28rpx; font-weight: 500; color: var(--color-text-1); line-height: 1.35;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mat-row-spec {
+  font-size: 22rpx; color: var(--color-text-2); margin-top: 6rpx;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mat-row-tag {
+  flex: none; font-size: 20rpx; padding: 4rpx 12rpx; border-radius: var(--radius-pill);
+  background: rgba(224,162,107,0.16); color: var(--color-warning);
+}
+.mat-empty { text-align: center; color: var(--color-text-3); font-size: 28rpx; padding: 60rpx 0; }
+
+/* 面料 BOM 行：左半区 标签+单位切换，右半区 数值输入框，1:1 均分 */
+.bom-dim { display: flex; align-items: center; gap: 16rpx; margin-top: 16rpx; } /* 中间均匀留白 */
+.bom-dim-left { display: flex; align-items: center; gap: 12rpx; flex: 1; } /* 左半区，严格占 1 份 */
+.bom-dim-text { font-size: 28rpx; color: var(--color-text-2); line-height: 1; flex: none; width: 32rpx; }
+.bom-dim-left .unit-toggle { margin-left: 0; }
+.bom-dim-input {
+  flex: 1;                                       /* 右半区，与左半区严格 1:1 */
+  text-align: left;                             /* 占位与输入文字靠左 */
+  background: var(--color-surface-2);           /* 浅米底，全局统一输入框外观 */
+  border-radius: var(--radius-inner);            /* 柔和大圆角，无边框 */
+  min-height: 64rpx; line-height: 32rpx; padding: 14rpx 20rpx; /* 高度压缩、尺寸紧凑 */
+  font-size: 28rpx; color: var(--color-text-1);
+}
+.bom-unit-suffix { font-size: 24rpx; color: var(--color-text-2); flex: none; padding-left: 4rpx; } /* 刀口布用量单位(kg/片)后缀 */
+
+/* 单位切换（cm/m、m²/cm²） */
+.unit-toggle {
+  display: inline-flex; align-items: stretch;
+  margin-left: 12rpx;
+  height: 64rpx;
+  border: 1rpx solid var(--color-divider);
+  border-radius: 8rpx;
+  overflow: hidden;
+  vertical-align: middle;
+}
+.unit-toggle .ut {
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 18rpx;
+  font-size: 26rpx;
+  color: var(--color-text-2);
+  background: var(--color-surface-2);
+}
+.unit-toggle .ut.on {
+  color: var(--color-primary-on);
+  background: var(--color-primary);
+  font-weight: 600;
+}
+.unit-toggle.sm { margin-left: 0; height: 52rpx; }
+.unit-toggle.sm .ut { padding: 0 14rpx; font-size: 24rpx; }
+
+/* ===== ph-input 在编辑页的情境宽度 ===== */
+.ph-full { width: 100%; }
+/* BOM 用量输入框在 flex 行内：组件根需 flex:1 撑开，避免被 width:100% 撑爆 */
+.bom-dim .ph-input { flex: 1; min-width: 0; width: auto; }
+.mat-search { width: 100%; }
+
+/* ===== 图文教程卡：紧凑化工序区块 ===== */
+.tut-head { display: flex; align-items: center; margin-bottom: 8rpx; }
+.tut-head-title { font-weight: 600; }
+.tut-fold { margin-left: auto; font-size: 24rpx; color: var(--color-primary-deep); }
+.step-list { margin-top: 4rpx; }
+
+/* 步骤卡片：白底 + 柔阴影，替代细线边框 */
+.step-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-inner);
+  padding: 12rpx 16rpx; margin-bottom: 10rpx;
+  box-shadow: var(--shadow-card);
+  box-sizing: border-box;
+}
+.step-card.dragging { box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.14); opacity: 0.96; }
+.step-bar { display: flex; align-items: center; gap: 10rpx; }
+.step-drag {
+  flex: none; width: 40rpx; height: 40rpx; line-height: 40rpx; text-align: center;
+  color: var(--color-text-3); font-size: 28rpx;
+}
+.step-num {
+  flex: none; width: 36rpx; height: 36rpx; line-height: 36rpx; text-align: center;
+  background: var(--color-primary-deep); color: var(--color-primary-on); border-radius: 999rpx; font-size: 22rpx;
+}
+/* 步骤标题：行内可编辑输入框 */
+.step-name-wrap { flex: 1; min-width: 0; }
+.step-name-input .ph-control {
+  background: transparent; padding: 6rpx 10rpx;
+  min-height: 44rpx; line-height: 30rpx; font-size: 26rpx;
+  border-radius: 10rpx;
+}
+.step-name-input .ph-control .ph-ph { font-size: 26rpx; }
+.step-name-input .ph-control:focus { background: var(--color-surface-2); }
+.step-toggle { flex: none; font-size: 22rpx; color: var(--color-primary-deep); }
+
+/* 编辑面板：各区块间距压缩（原 16rpx → 8~10rpx） */
+.step-edit { margin-top: 6rpx; }
+.tut-field { margin-bottom: 8rpx; }
+
+/* 图片区：竖向排列，每行左图右说明，顶部对齐 */
+.step-imgs { display: flex; flex-direction: column; gap: 10rpx; margin: 8rpx 0; }
+.step-img-row {
+  display: flex; align-items: flex-start; gap: 12rpx;
+  background: var(--color-surface); border-radius: var(--radius-inner);
+  padding: 10rpx; box-shadow: 0 2rpx 8rpx rgba(120, 90, 60, 0.04);
+}
+.step-img-row.dragging { box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.14); opacity: 0.96; }
+.step-img-thumb-wrap { position: relative; width: 200rpx; height: 200rpx; flex: none; border-radius: var(--radius-inner); overflow: hidden; }
+.step-img-thumb { width: 200rpx; height: 200rpx; border-radius: var(--radius-inner); background: var(--color-divider); display: block; }
+.step-img-del {
+  position: absolute; top: 0; right: 0; width: 36rpx; height: 36rpx;
+  background: rgba(74,63,53,0.5); color: #fff; font-size: 20rpx;
+  display: flex; align-items: center; justify-content: center; border-bottom-left-radius: var(--radius-inner);
+}
+.step-img-drag {
+  position: absolute; top: 0; left: 0; width: 36rpx; height: 36rpx;
+  background: rgba(74,63,53,0.35); color: #fff; font-size: 20rpx;
+  display: flex; align-items: center; justify-content: center; border-bottom-right-radius: var(--radius-inner);
+}
+/* 图片说明输入框：固定 200rpx 与左图硬对齐，超出内部滚动 */
+.step-img-remark {
+  flex: 1; min-width: 0; height: 200rpx;
+  border-radius: var(--radius-inner); overflow: hidden;
+}
+.step-img-remark .ph-input,
+.step-img-remark .ph-control {
+  width: 100%; height: 200rpx !important; min-height: 200rpx !important;
+  box-sizing: border-box;
+}
+.step-img-remark .ph-control { overflow: auto; }
+.step-img-add {
+  width: 200rpx; height: 120rpx; border-radius: var(--radius-inner);
+  border: 2rpx dashed var(--color-primary); color: var(--color-primary-deep);
+  display: flex; align-items: center; justify-content: center; font-size: 26rpx; font-weight: 600;
+  box-sizing: border-box; background: var(--color-surface);
+}
+
+/* 自定义全屏图片预览 */
+.img-preview-mask {
+  position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.92); z-index: 1000;
+  display: flex; flex-direction: column;
+}
+.img-preview-close {
+  position: absolute; top: 64rpx; right: 24rpx;
+  width: 56rpx; height: 56rpx; line-height: 56rpx; text-align: center;
+  color: #fff; font-size: 32rpx; z-index: 1002;
+}
+.img-preview-swiper { flex: 1; width: 100%; }
+.img-preview-item {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%;
+}
+.img-preview-img {
+  width: 100%; height: 100%;
+  display: block;
+}
+.img-preview-caption-wrap {
+  padding: 24rpx 32rpx 64rpx;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0));
+}
+.img-preview-caption {
+  font-size: 28rpx; color: #fff; line-height: 1.5;
+  word-break: break-all; word-wrap: break-word;
+}
+.img-preview-counter {
+  display: block; margin-top: 12rpx;
+  font-size: 24rpx; color: rgba(255,255,255,0.6);
+}
+
+/* 物料标签：小字收紧 */
+.step-mats { margin: 6rpx 0; }
+.tut-mats-label { font-size: 22rpx; color: var(--color-text-3); margin-bottom: 4rpx; }
+.mat-chips { display: flex; flex-wrap: wrap; gap: 10rpx; }
+.mat-chip {
+  padding: 8rpx 16rpx; border-radius: 999rpx; font-size: 22rpx;
+  background: var(--color-surface); color: var(--color-text-2); border: 1rpx solid var(--color-divider);
+}
+.mat-chip.on { background: var(--color-primary-deep); color: var(--color-primary-on); border-color: var(--color-primary-deep); }
+
+/* 底部按钮组：功能不变，尺寸收紧、均匀排布 */
+.step-ops { display: flex; flex-wrap: wrap; gap: 8rpx; margin-top: 8rpx; }
+.step-op {
+  flex: 1; min-width: 120rpx; text-align: center; padding: 12rpx 0;
+  border-radius: var(--radius-inner); font-size: 22rpx;
+  background: var(--color-surface); color: var(--color-text-1); border: 1rpx solid var(--color-divider);
+}
+.step-op.on { background: var(--color-primary-soft); color: var(--color-primary-deep); border-color: var(--color-primary); }
+.step-op.danger { color: var(--color-danger); }
+.step-op:active { background: var(--color-primary-soft); }
+.tut-add-row { display: flex; gap: 12rpx; margin-top: 8rpx; }
+.tut-add-row .btn { flex: 1; }
+.tut-preview-row { display: flex; gap: 12rpx; margin-top: 12rpx; }
+.tut-preview-row .btn { flex: 1; }
+/* V122：多片摘要（一个物料用两块布）—— 只读小字，跟在尺寸下面 */
+.bom-piece-row { padding: 6rpx 24rpx 0; }
+.bom-piece-text { font-size: 22rpx; color: var(--color-text-3); }

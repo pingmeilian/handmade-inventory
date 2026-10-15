@@ -1,0 +1,55 @@
+/* pages/mine/mine.wxss —— 我的 */
+.profile { display: flex; align-items: center; gap: 24rpx; }
+.avatar {
+  width: 96rpx; height: 96rpx; border-radius: 28rpx; flex: none;
+  background: var(--color-primary); color: var(--color-primary-on); font-size: 44rpx; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+}
+.profile-name { font-size: 34rpx; font-weight: 600; color: var(--color-text-1); }
+.profile-sub { font-size: 22rpx; color: var(--color-text-3); margin-top: 8rpx; }
+
+.stat { display: flex; }
+.stat-item { flex: 1; text-align: center; }
+.stat-v { display: block; font-size: 38rpx; font-weight: 600; color: var(--color-primary-deep); font-variant-numeric: tabular-nums; }
+.stat-k { display: block; font-size: 22rpx; color: var(--color-text-3); margin-top: 6rpx; }
+
+.menu { padding: 8rpx 32rpx; }
+.menu-row { display: flex; align-items: center; justify-content: space-between; min-height: 100rpx; border-bottom: 1rpx solid var(--color-divider); }
+.menu-row:last-child { border-bottom: none; }
+.row-arrow { color: var(--color-text-3); font-size: 36rpx; }
+
+/* 2026-09-27（V67）删除：.ps-main「两行入口」样式。
+   「预设设置」入口的说明行已按用户要求去掉，本页不再有两行形态的入口。 */
+
+/* 损耗成本卡（点击整张卡片进入明细） */
+.loss-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16rpx; }
+.loss-title { font-size: 30rpx; font-weight: 600; color: var(--color-text-1); }
+.loss-title .sub { font-size: 24rpx; font-weight: 400; color: var(--color-text-3); margin-left: 12rpx; }
+.loss-arrow { color: var(--color-text-3); font-size: 32rpx; margin-left: auto; }
+.loss-card-link { transition: transform 0.12s ease; }
+.loss-card-link:active { transform: scale(0.985); }
+.loss-bar { display: flex; height: 28rpx; border-radius: var(--radius-pill); overflow: hidden; background: var(--color-surface-2); margin: 8rpx 0 20rpx; }
+.loss-seg { height: 100%; }
+.seg-amort { background: var(--color-primary); }
+.seg-depre { background: #7A9E7E; }
+.seg-tool { background: #D9A441; }
+.loss-legend { display: flex; flex-wrap: wrap; gap: 12rpx 28rpx; }
+.lg { display: flex; align-items: center; gap: 10rpx; font-size: 24rpx; color: var(--color-text-2); }
+.dot-amort { background: var(--color-primary); }
+.dot-depre { background: #7A9E7E; }
+.dot-tool { background: #D9A441; }
+.loss-empty { font-size: 24rpx; color: var(--color-text-3); padding: 12rpx 0; }
+.loss-net { margin-top: 18rpx; padding-top: 18rpx; border-top: 1rpx solid var(--color-divider); font-size: 24rpx; color: var(--color-text-2); }
+
+/* 累计总账卡（V131）：两个大数字并列，主数字=A 累计投入
+   V135：用户「这个卡片在里边的字不拥挤的情况下高度再窄一点」⇒ **只收间距、不动字**：
+     卡内上下留白 32 → 22rpx（`.card` 默认走 --card-padding）；数字上间距 6 → 4rpx；
+     底部行上间距 16 → 10rpx。合计矮约 28rpx（≈14px），字号与行高一律不变。
+   ⚠️ 别用加 `line-height` 或缩小字号来"变矮" —— 那是把字压挤，不是把卡压矮（守卫 ⑥ 盯着）。 */
+.ledger-card { padding: 22rpx var(--card-padding); margin-bottom: var(--gap-card); }
+.ledger-row { display: flex; gap: 24rpx; }
+.ledger-col { flex: 1; min-width: 0; }
+.ledger-k { display: block; font-size: 22rpx; color: var(--color-text-3); }
+.ledger-v { display: block; font-size: 40rpx; font-weight: 700; color: var(--color-text-1); font-variant-numeric: tabular-nums; margin-top: 4rpx; }
+.ledger-v-in { color: var(--color-primary-deep); }
+.ledger-foot { font-size: 20rpx; color: var(--color-text-3); margin-top: 10rpx; }

@@ -1,0 +1,167 @@
+<!-- pages/products/instances.wxml —— 单成品「商品 / 样品」独立管理页 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+
+  <!-- 头部：成品信息（点击进完整详情） -->
+  <view class="head">
+    <image wx:if="{{thumb}}" class="head-thumb" src="{{thumb}}" mode="aspectFill" bindtap="goDetail" />
+    <view wx:else class="head-thumb ph-fill" style="background:{{color}};color:{{ink}}" bindtap="goDetail">{{placeholder}}</view>
+    <view class="head-body" bindtap="goDetail">
+      <view class="head-name">{{name}}</view>
+      <view class="head-pc">{{pcName}} · 点击查看完整详情 ›</view>
+    </view>
+  </view>
+
+  <!-- 大数字统计卡 -->
+  <view class="stat-card {{type==='sample'?'sample':''}}">
+    <view class="stat-num">{{count}}</view>
+    <view class="stat-label">{{type==='sample'?'样品件数（仅成本，不出利润）':'待售件数（计入商品数）'}}</view>
+  </view>
+
+  <!-- 商品：已售记录 -->
+  <view wx:if="{{type==='merch'}}" class="section">
+    <view class="section-title">已售记录（共 {{sales.length}} 笔）</view>
+    <view wx:if="{{sales.length===0}}" class="empty-sm">暂无已售记录</view>
+    <view wx:for="{{sales}}" wx:key="idx" class="sale-row">
+      <view class="sale-main">
+        <text class="sale-qty">{{item.qty}} 件</text>
+        <text class="sale-price">¥{{item.price}}</text>
+      </view>
+      <view class="sale-sub">{{item.date}} · 金额 ¥{{item.amount}} · 利润 ¥{{item.profit}}</view>
+    </view>
+  </view>
+
+  <!-- 样品：说明 -->
+  <view wx:if="{{type==='sample'}}" class="section">
+    <view class="section-title">样品说明</view>
+    <view class="sample-note">样品仅记录成本，不产生利润。{{costText}}。可用于自用、送人、瑕疵销毁或转为商品。</view>
+  </view>
+
+  <!-- 底部动作栏 -->
+  <view class="action-bar">
+    <block wx:if="{{type==='merch'}}">
+      <view class="act act-primary" bindtap="openProduceQty">增加数量</view>
+      <view class="act act-primary" bindtap="openSell">卖出</view>
+      <view class="act act-ghost" bindtap="openTransferQty">转为样品</view>
+    </block>
+    <block wx:else>
+      <view class="act act-primary" bindtap="openProduceQty">增加数量</view>
+      <view class="act act-primary" bindtap="openDiscard">出库</view>
+      <view class="act act-ghost" bindtap="openTransferQty">转为商品</view>
+    </block>
+  </view>
+
+  <!-- 数量输入面板（增加数量 / 转类共用） -->
+  <view wx:if="{{showQty}}" class="mask" bindtap="closeQty">
+    <view class="qty-panel" catchtap="noop">
+      <view class="qty-title">{{qtyTitle}}</view>
+      <ph-input ph-class="qty-input" type="number" value="{{qtyValue}}" bind:input="onQtyInput" focus />
+      <!-- 这批实际用料（V74；2026-09-30 V92 收窄）：只列**不走裁剪界面**的行 ——
+           辅料、按批估量的刀口布，以及极少数没有长宽的面积面料行。
+           有长宽的面料行归裁剪界面管（每片各自填长宽、各自选布），这里不再出现。 -->
+      <view wx:if="{{qtyMode==='produce' && usageLines.length}}" class="usage-block">
+        <view class="usage-head" bindtap="toggleUsage">
+          <text class="usage-title">这批实际用料</text>
+          <text class="usage-toggle">{{usageExpanded ? '收起' : '可改'}}</text>
+        </view>
+        <view wx:if="{{usageExpanded}}" class="usage-list">
+          <view wx:for="{{usageLines}}" wx:key="materialId" class="usage-row">
+            <view class="usage-line">
+              <view class="usage-info">
+                <text class="usage-name">{{item.name}}</text>
+                <text class="usage-spec">{{item.spec}}</text>
+              </view>
+              <!-- ⚠️ 必须包一层定宽容器：ph-input 组件根节点自带 width:100%，
+                   裸放进 flex 行会撑满整行、把物料名挤成一列（2026-09-28 真机崩版） -->
+              <view class="usage-input-wrap">
+                <ph-input ph-class="usage-input" type="digit" value="{{item.input}}" data-i="{{index}}" bind:input="onUsageInput" />
+              </view>
+              <text class="usage-unit">{{item.unit}}</text>
+            </view>
+          </view>
+          <view class="usage-tip">不改就按标准用量扣；要改就填这一批实际用掉的量</view>
+        </view>
+      </view>
+      <view class="qty-actions">
+        <view class="fp-btn ghost" bindtap="closeQty">取消</view>
+        <view class="fp-btn primary" bindtap="confirmQty">确定</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 记录售出面板：与成品详情页同一套交互，价格可按「单价 / 总价」录入 -->
+  <view wx:if="{{showSell}}" class="mask" bindtap="closeSell">
+    <view class="qty-panel sell-panel" catchtap="noop">
+      <view class="qty-title">记录售出</view>
+      <view class="field">
+        <view class="field-label">数量</view>
+        <ph-input ph-class="sell-input" type="digit" value="{{sellQty}}" bind:input="onSellQty" />
+      </view>
+      <view class="field">
+        <view class="sell-head">
+          <view class="field-label">价格</view>
+          <view class="sell-seg">
+            <view class="sell-seg-item {{sellMode==='unit'?'on':''}}" data-m="unit" bindtap="switchSellMode">单价</view>
+            <view class="sell-seg-item {{sellMode==='total'?'on':''}}" data-m="total" bindtap="switchSellMode">总价</view>
+          </view>
+        </view>
+        <ph-input ph-class="sell-input" type="digit" value="{{sellPrice}}" bind:input="onSellPrice" />
+        <view wx:if="{{sellPreview}}" class="sell-preview">{{sellPreview}}</view>
+        <view wx:if="{{sellInfo}}" class="sell-preview">{{sellInfo}}</view>
+      </view>
+      <view class="field">
+        <view class="field-label">日期</view>
+        <view class="sell-input picker-trigger" bindtap="openSellDate">{{sellDate}}</view>
+      </view>
+      <!-- 卖给谁（2026-09-27 D76）：可留空。与成品详情页同一口径 -->
+      <view class="field">
+        <view class="field-label">卖给谁<text class="sell-opt">　可留空</text></view>
+        <ph-input ph-class="sell-input" placeholder="如：小美 / 闲鱼买家" value="{{sellClient}}" bind:input="onSellClient" />
+      </view>
+      <view class="qty-actions">
+        <view class="fp-btn ghost" bindtap="closeSell">取消</view>
+        <view class="fp-btn primary" bindtap="confirmSell">确定</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 样品出库：销毁 / 自用 / 赠送… 只减样品库存 + 记一笔成本，不产生利润 -->
+  <view wx:if="{{showDiscard}}" class="mask" bindtap="closeDiscard">
+    <view class="qty-panel sell-panel" catchtap="noop">
+      <view class="qty-title">样品出库</view>
+      <view class="field">
+        <view class="field-label">数量</view>
+        <ph-input ph-class="sell-input" type="digit" value="{{dcQty}}" bind:input="onDcQty" />
+      </view>
+      <view class="field">
+        <view class="field-label">出库类型</view>
+        <view class="dc-types">
+          <view wx:for="{{dcTypeList}}" wx:key="*this"
+                class="dc-type {{dcReason===item?'on':''}}"
+                data-r="{{item}}" bindtap="pickDcType">{{item}}</view>
+        </view>
+      </view>
+      <view class="field">
+        <view class="field-label">日期</view>
+        <view class="sell-input picker-trigger" bindtap="openDcDate">{{dcDate}}</view>
+      </view>
+      <view class="field">
+        <view class="field-label">备注（选填）</view>
+        <ph-input ph-class="sell-input" value="{{dcRemark}}" placeholder="如：送朋友 / 瑕疵销毁" bind:input="onDcRemark" />
+      </view>
+      <view class="dc-tip">出库只计成本、不计利润（当前成本 ¥{{dcCostText}}）</view>
+      <view class="qty-actions">
+        <view class="fp-btn ghost" bindtap="closeDiscard">取消</view>
+        <view class="fp-btn primary" bindtap="confirmDiscard">确定</view>
+      </view>
+    </view>
+  </view>
+
+  <date-picker-sheet show="{{dpDc}}" title="选择日期" value="{{dcDate}}"
+                     bind:change="onDcDate" bind:confirm="closeDcDate" bind:cancel="closeDcDate" />
+
+  <date-picker-sheet show="{{dpSell}}" title="选择日期" value="{{sellDate}}"
+                     bind:change="onSellDate" bind:confirm="closeSellDate" bind:cancel="closeSellDate" />
+
+</view>

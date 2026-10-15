@@ -1,0 +1,27 @@
+<!-- pages/settings/basic.wxml —— 默认值与预警
+     原名「基础设置」：页内其实只有"默认单位 + 低库存阈值"两项，叫"基础设置"名不副实，
+     用户不知道点进去有什么。2026-09-27 更名，并移入「预设设置」。
+
+     ⚠️ 2026-09-27（V67）清掉两处冗余：用户「把说明去掉 标题也去掉」
+        · 页面内的 <view class="section-title">默认值与预警</view> —— 导航栏已经是
+          「默认值与预警」（basic.json），同屏出现两次，第二遍纯占地方
+        · 阈值下面那行小字说明
+        守卫 tests/guard-preset-entries.test.js ⑦ 盯着"标题别再加回来"。 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <view class="card">
+    <view class="field">
+      <view class="field-label">新建物料时默认带出的单位</view>
+      <ph-input ph-class="field-control input" placeholder="个" value="{{defaultUnit}}" bind:input="onUnit" />
+    </view>
+    <view class="field">
+      <view class="field-label">低库存预警阈值</view>
+      <ph-input ph-class="field-control input" type="digit" placeholder="5" value="{{defaultThreshold}}" bind:input="onThreshold" />
+    </view>
+  </view>
+  <view class="bottom-bar">
+    <view class="btn btn-primary btn-large btn-block" bindtap="save">保存设置</view>
+  </view>
+  <view class="safe-bottom"></view>
+</view>

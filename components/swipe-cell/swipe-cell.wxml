@@ -1,0 +1,48 @@
+<!-- components/swipe-cell/swipe-cell.wxml —— 左滑露出操作区（通用组件，不含任何业务语义） -->
+
+<!--
+  结构：操作区（绝对定位，贴在 reveal 侧）+ 内容（跟手位移，盖在操作区之上）
+  两个关键点：
+   ① 操作区的露出侧由 dir 决定 → class="swipe-actions--{{dir}}"（两套定位都在 wxss 里）
+   ② 内容位移取 bodyX（符号已在 gesture.contentX 里按方向算好），WXML 里不写死负号，
+      否则 direction=right（RTL）时会滑反
+-->
+<view class="swipe ext-class {{dragging ? 'is-dragging' : ''}} {{open ? 'is-open' : ''}}">
+
+  <!-- 操作区：宽度由每个操作项的 width（rpx）撑开，与手势数学用同一份配置 -->
+  <view class="swipe-actions swipe-actions--{{dir}}">
+    <view
+      wx:for="{{actions}}"
+      wx:key="key"
+      class="swipe-action sa-{{item.theme || 'default'}} {{item.disabled ? 'is-disabled' : ''}}"
+      style="width: {{item.width || actionWidth}}rpx"
+      data-i="{{index}}"
+      hover-class="sa-hover"
+      hover-stay-time="60"
+      catchtap="onActionTap"
+    >
+      <image wx:if="{{item.iconSrc}}" class="sa-ico" src="{{item.iconSrc}}" mode="aspectFit" />
+      <text wx:elif="{{item.icon}}" class="sa-ico-text">{{item.icon}}</text>
+      <text class="sa-txt">{{item.text}}</text>
+    </view>
+  </view>
+
+  <!-- 内容：跟手位移。touch 给手机，pointer 给 PC（鼠标拖拽走这条通路）
+       pointerleave / pointercancel：鼠标在元素外抬起或被系统打断时没有 pointerup，
+       靠它们兜住手势，不留"停在半开"的卡片 -->
+  <view
+    class="swipe-body"
+    style="transform: translateX({{bodyX}}px)"
+    bindtouchstart="onTouchStart"
+    bindtouchmove="onTouchMove"
+    bindtouchend="onTouchEnd"
+    bindtouchcancel="onTouchEnd"
+    bind:pointerdown="onPointerDown"
+    bind:pointermove="onPointerMove"
+    bind:pointerup="onPointerUp"
+    bind:pointercancel="onPointerLeave"
+    bind:pointerleave="onPointerLeave"
+  >
+    <slot></slot>
+  </view>
+</view>

@@ -1,0 +1,41 @@
+<!-- pages/settings/presets.wxml —— 预设设置（2026-09-27）
+     ⚠️ 这一页在同一天里改了三版，方向还反了两次，写在这里免得下次看不懂：
+       V65 新建本页 —— 分 3 组、每项带一行说明（当时的问题是"不知道点进去有什么"）
+       V66 用户「不需要加说明，看起来很乱」→ 删分组说明，标题降为小灰标签
+       V67 用户「把说明去掉 标题也去掉」→ 标题与说明全部去掉，只剩可点入口
+           （同一天里用户对"说明"的判断变了 —— 记在这里，不是为了辩解，
+            而是防止以后有人看到空列表以为"被误删了"又给加回来）
+
+     ⚠️ 守卫 tests/guard-preset-entries.test.js 盯着三件事：
+        ① 这里的入口不许丢（丢一个 = 那个功能没入口）
+        ② 不许再散落回「我的」页（避免两处维护、文案迟早不一致）
+        ③ 不许把分组标题 / 说明行加回来（用户明确要求去掉，④ 盯着） -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+
+  <view class="card">
+
+    <view class="menu-row" data-url="/pages/settings/listEditor?type=materialCategory" bindtap="go">
+      <text class="row-title">物料分类</text><text class="row-arrow">›</text>
+    </view>
+
+    <view class="menu-row" data-url="/pages/settings/listEditor?type=productCategory" bindtap="go">
+      <text class="row-title">品类</text><text class="row-arrow">›</text>
+    </view>
+
+    <view class="menu-row" data-url="/pages/settings/listEditor?type=unit" bindtap="go">
+      <text class="row-title">计量单位</text><text class="row-arrow">›</text>
+    </view>
+
+    <view class="menu-row" data-url="/pages/settings/listEditor?type=platform" bindtap="go">
+      <text class="row-title">排单平台</text><text class="row-arrow">›</text>
+    </view>
+
+    <view class="menu-row" data-url="/pages/settings/basic" bindtap="go">
+      <text class="row-title">默认值与预警</text><text class="row-arrow">›</text>
+    </view>
+
+  </view>
+
+</view>

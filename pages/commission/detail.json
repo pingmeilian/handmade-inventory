@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "排单详情",
+  "usingComponents": {
+    "deliver-sheet": "/components/deliver-sheet/deliver-sheet"
+  }
+}

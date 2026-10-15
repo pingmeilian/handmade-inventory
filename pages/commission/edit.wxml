@@ -1,0 +1,41 @@
+<!-- pages/commission/edit.wxml —— 排单编辑 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <view class="card">
+    <view class="field">
+      <view class="field-label">关联成品<span class="req">*</span></view>
+      <view class="field-control picker picker-trigger {{productId?'':'placeholder'}}" bindtap="openProductPicker">{{productName || '选择成品'}}</view>
+    </view>
+    <view class="field">
+      <view class="field-label">客户 / 委托方<span class="req">*</span></view>
+      <ph-input ph-class="field-control input" placeholder="如：小红 / 淘宝店" value="{{client}}" bind:input="onClient" />
+    </view>
+    <view class="field">
+      <view class="field-label">数量<span class="req">*</span></view>
+      <ph-input ph-class="field-control input" type="digit" placeholder="如：10" value="{{qty}}" bind:input="onQty" />
+    </view>
+    <view class="field">
+      <view class="field-label">交付截止日<span class="req">*</span></view>
+      <view class="field-control picker picker-trigger {{deadline?'':'placeholder'}}" bindtap="openDeadline">{{deadline || '选择日期'}}</view>
+    </view>
+    <view class="field">
+      <view class="field-label">单价（选填）</view>
+      <ph-input ph-class="field-control input" type="digit" placeholder="如：39" value="{{price}}" bind:input="onPrice" />
+    </view>
+    <view class="field">
+      <view class="field-label">备注</view>
+      <ph-input ph-class="field-control input" multiline autoHeight placeholder="特殊要求、尺寸、配色…" value="{{remark}}" bind:input="onRemark" />
+    </view>
+  </view>
+
+  <view class="tip">交付时按「实际出库制」扣减成品 BOM 对应物料，库存不足将拦截。</view>
+
+  <view class="bottom-bar">
+    <view class="btn btn-primary btn-large btn-block" bindtap="save">保存排单</view>
+  </view>
+  <view class="safe-bottom"></view>
+
+  <picker-sheet show="{{picker.show}}" title="{{picker.title}}" options="{{picker.options}}" range-key="{{picker.rangeKey}}" value="{{picker.value}}" bind:cancel="closePicker" bind:confirm="onPickerConfirm" />
+  <date-picker-sheet show="{{dpShow}}" title="选择交付截止日" value="{{deadline}}" bind:change="onDeadline" bind:confirm="closeDate" bind:cancel="closeDate" />
+</view>

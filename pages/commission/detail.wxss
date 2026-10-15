@@ -1,0 +1,47 @@
+/* pages/commission/detail.wxss */
+.page-wrap { padding: 24rpx; box-sizing: border-box; }
+
+.d-head { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-bottom: 16rpx; }
+.d-title { font-size: 38rpx; font-weight: 700; color: var(--color-text-1); }
+
+.d-row { display: flex; padding: 14rpx 0; border-top: 1rpx solid var(--color-divider); font-size: 28rpx; }
+.d-row .k { flex: none; width: 160rpx; color: var(--color-text-3); }
+.d-row .v { flex: 1; color: var(--color-text-1); }
+
+.tag { padding: 6rpx 18rpx; border-radius: 999rpx; font-size: 22rpx; font-weight: 600; }
+.badge-danger { background: #F6D9D2; color: #C0502E; }
+.badge-warning { background: #F7E6CE; color: #B9802F; }
+.badge-ok { background: #E4EFE6; color: #4E8D5B; }
+.badge-normal { background: var(--color-surface-2); color: var(--color-text-2); }
+
+.link-card {
+  margin-top: 24rpx; background: var(--color-surface); border-radius: var(--radius-card);
+  padding: 24rpx; box-shadow: var(--shadow-card);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 28rpx; color: var(--color-primary); font-weight: 600;
+}
+.link-card .arrow { font-size: 36rpx; color: var(--color-text-3); }
+
+.actions { margin-top: 24rpx; display: flex; flex-direction: column; gap: 18rpx; }
+
+/* 交付记录列表（含撤销） */
+.sale-row { display: flex; align-items: center; gap: 16rpx; padding: 14rpx 0; border-bottom: 1rpx solid var(--color-divider); }
+.sale-row:last-child { border-bottom: none; }
+.sale-q { font-size: 26rpx; color: var(--color-text-2); }
+/* V149：交付来源小标签 —— 「现做」= 扣了料（默认色），「在库」= 没扣料（主色，与前者一眼分开） */
+.sale-src {
+  flex: none; height: 34rpx; line-height: 34rpx; padding: 0 12rpx;
+  border-radius: var(--radius-pill); font-size: 20rpx;
+  background: var(--color-surface-2); color: var(--color-text-3);
+}
+.sale-src.src-stock { background: var(--color-primary-soft); color: var(--color-primary-deep); }
+.sale-d { font-size: 22rpx; color: var(--color-text-3); flex: 1; }
+.sale-del { font-size: 24rpx; color: var(--color-danger); margin-left: 8rpx; }
+.section-title { font-size: 28rpx; font-weight: 600; color: var(--color-text-1); margin-bottom: 8rpx; }
+.section-title .sub { font-size: 22rpx; color: var(--color-text-3); font-weight: 400; margin-left: 12rpx; }
+.t-caption { font-size: 22rpx; color: var(--color-text-3); margin-top: 8rpx; }
+
+/* 折叠展开区头（交付记录） */
+.sec-head { display: flex; align-items: center; justify-content: space-between; }
+.collapse-arrow { font-size: 24rpx; color: var(--color-primary-deep); font-weight: 500; flex: none; }
+.expand-tip { font-size: 24rpx; color: var(--color-primary-deep); text-align: center; padding: 16rpx 0 4rpx; }

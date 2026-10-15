@@ -1,0 +1,68 @@
+<!-- pages/ledger/ledger.wxml —— 累计总账（V131 建页 / V132 重排 / V133 按真机反馈再调） -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<!-- V132 用户需求：「太乱、不够简洁；说明文字太多；A、B 要并排（每行对照着看）；尽量不要有换行」
+     ⇒ ① A、B **并排**两卡各占半行，B 侧空位用「—」补齐（保证两边「合计」落在同一横线）；
+        ② 说明文字**全部删掉**（原 5 处）。
+     V133 真机反馈修正：「下边也没对上啊　两个卡片金额可以放在最下边一行，免得金额大了把
+     AB 卡片标题挤串行」⇒ ③ **「合计」从卡标题行挪到卡片最下边一行**：
+        真机上金额一大就把标题挤成两行（「A · 累计投」+「入」），A 卡内容被推低、两边行错位。
+     ⇒ 现在两张卡的标题行**只有文字、不含金额**；金额统一落在卡内最后一行。 -->
+<!-- V136（用户 2026-10-10）：「我要总账，只显示当前空间的总账，不同的空间用不同的总账」
+     ⇒ ① 取数改按当前手作空间（见 ledger.js，与「我的」页那张卡统一）；
+        ② **标题旁标出空间名**（`wx:if` 守着，取不到名字时整块不出现）——
+           否则在另一个空间看这本账时，用户没法确认"现在看的是哪一本"。 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <view class="content-panel">
+    <view class="ledger-head">
+      <view class="ledger-title">累计总账<text wx:if="{{spaceName}}" class="ledger-space">· {{spaceName}}</text></view>
+      <view class="ledger-range">{{from}} 起 · 至 {{to}}</view>
+    </view>
+
+    <!-- 两个大数字：主数字 = A 累计投入（用户拍板） -->
+    <view class="hero">
+      <view class="hero-col">
+        <view class="hero-k">总计消费</view>
+        <view class="hero-v">¥{{spendA.totalText}}</view>
+      </view>
+      <view class="hero-col hero-col-in">
+        <view class="hero-k">总计收入</view>
+        <view class="hero-v">¥{{income.totalText}}</view>
+      </view>
+    </view>
+
+    <!-- 收入 -->
+    <view class="sec">
+      <view class="sec-title"><text>收入</text><text class="col-total">¥{{income.totalText}}</text></view>
+      <view class="row" wx:for="{{rowsIncome}}" wx:key="key">
+        <text class="row-l">{{item.label}}</text>
+        <text class="row-v">¥{{item.valueText}}</text>
+      </view>
+    </view>
+
+    <!-- 消费：A、B 并排 —— 同一横线上的左右两行就是一对（买料 ↔ 用掉的料、机器原值 ↔ 折旧）
+         ⚠️ 卡标题行只放文字；金额一律在最后一行（V133），否则金额一大标题就折行、两边错位。 -->
+    <view class="cols">
+      <view class="col">
+        <view class="col-head">A · 累计投入</view>
+        <view class="row {{item.to ? 'row-link' : ''}}" wx:for="{{rowsA}}" wx:key="key"
+              data-to="{{item.to}}" bindtap="openRow">
+          <text class="row-l">{{item.label}}</text>
+          <text class="row-v">{{item.valueText}}</text>
+        </view>
+        <view class="row row-total"><text class="row-l">合计</text><text class="row-v">¥{{spendA.totalText}}</text></view>
+      </view>
+      <view class="col">
+        <view class="col-head">B · 累计已耗</view>
+        <view class="row {{item.placeholder ? 'row-ph' : ''}} {{item.to ? 'row-link' : ''}}" wx:for="{{rowsB}}" wx:key="key"
+              data-to="{{item.to}}" bindtap="openRow">
+          <text class="row-l">{{item.label}}</text>
+          <text class="row-v">{{item.valueText}}</text>
+        </view>
+        <view class="row row-total"><text class="row-l">合计</text><text class="row-v">¥{{spendB.totalText}}</text></view>
+      </view>
+    </view>
+
+    <view class="safe-bottom"></view>
+  </view>
+</view>

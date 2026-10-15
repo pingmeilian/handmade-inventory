@@ -1,0 +1,83 @@
+<!-- pages/settings/history.wxml —— 物料出入库
+     2026-09-27（V69）由「出入库历史」改名：本页数据源是 store.getFlows()，
+     **只含物料流水** —— 系统里没有成品流水表，成品的进出记在成品对象上，
+     已单独做成「成品出入库」页（pages/settings/sales）。
+     不改名会让用户以为本页也含成品 ⇒ 两个入口一眼分明：一个管料、一个管成品。 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<!-- V136：本页成了「累计总账」的下钻落点（物料采购 → 入库 / 用掉的物料 → 出库）。
+     ⇒ 从总账跳进来时（`src=ledger`）多显示一句**口径说明** —— 这是"方案甲"的组成部分。
+     ⚠️ 2026-10-11（V142b）说明**重写过**：改前本页是**数量**、总账是**金额**，那句写的是"量纲不同"；
+       现在两边**都是金额**，差别只剩**范围宽窄**（本页含全部动账，总账只算真采购与实际用料）。
+       ⇒ 老文案不改就是错的（会告诉用户"这里是数量"，而屏幕上是 ¥）。
+     ⚠️ 用 `wx:if` 守着：平时来查流水的人不该被这行字打扰。 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <view class="space-bar"><text class="space-name">{{curName}}</text></view>
+
+  <view wx:if="{{fromLedger}}" class="ledger-note">
+    <text>从总账进来：两边都是金额，差别在范围 —— 本页「入库 / 出库」是全部动账（含退料、盘盈盘亏、期初校准、冲销）；总账只算真采购（手动入库）与实际用料，所以数字不会完全相等。</text>
+  </view>
+
+  <!-- 筛选（M1-11：时间区间 / 类型 / 物料名称） -->
+  <view class="filter-card">
+    <view class="filter-row">
+      <text class="filter-label">类型</text>
+      <view class="chip {{typeFilter==='all'?'on':''}}" data-v="all" bindtap="setTypeFilter">全部</view>
+      <view class="chip {{typeFilter==='in'?'on':''}}" data-v="in" bindtap="setTypeFilter">入库</view>
+      <view class="chip {{typeFilter==='out'?'on':''}}" data-v="out" bindtap="setTypeFilter">出库</view>
+    </view>
+    <view class="filter-row">
+      <text class="filter-label">物料</text>
+      <ph-input ph-class="filter-input" placeholder="按物料名称搜索" value="{{kw}}" bind:input="onKw" />
+    </view>
+    <view class="filter-row">
+      <text class="filter-label">区间</text>
+      <view class="range-picker picker-trigger" bindtap="openDateStart">{{dateStart || '起始'}}</view>
+      <text class="range-tilde">至</text>
+      <view class="range-picker picker-trigger" bindtap="openDateEnd">{{dateEnd || '结束'}}</view>
+      <view class="filter-reset" bindtap="resetFilters">重置</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">趋势曲线<text class="sub">{{curveLabel}} · 近 30 天</text></view>
+    <view class="seg-wrap">
+      <view class="segment metric-seg">
+        <view class="segment-item {{curveMetric==='inventoryValue'?'active':''}}" data-m="inventoryValue" bindtap="switchCurve">库存</view>
+        <view class="segment-item {{curveMetric==='inboundAmount'?'active':''}}" data-m="inboundAmount" bindtap="switchCurve">入库</view>
+        <view class="segment-item {{curveMetric==='outboundAmount'?'active':''}}" data-m="outboundAmount" bindtap="switchCurve">出库</view>
+      </view>
+    </view>
+    <!-- V142：库存=折线（存量水位）／入库·出库=柱状（离散事件，有动作才有柱）。
+         V142b：三个指标**都是金额**（用户：「出入库的单位应该是金额啊 怎么能按个算」）——
+         改前入库/出库按数量画，而数量跨单位不能相加（片 / cm² / m² / kg），
+         只能"取笔数最多的单位当主单位、其余排除"，图会漏掉一部分流水。
+         高度 380 = 原 360 + 顶部那行"按住读数"的 26px；单位一律 ¥ 前缀（unitPos=pre）。 -->
+    <line-chart points="{{curvePoints}}" type="{{chartType}}" color="#C28E72"
+                unit="{{chartUnit}}" unitPos="{{chartUnitPos}}"
+                height="380" emptyText="{{curveEmptyText}}"></line-chart>
+    <view wx:if="{{curveSummary}}" class="curve-sum">{{curveSummary}}</view>
+    <view wx:if="{{curveNote}}" class="curve-note">{{curveNote}}</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">
+      流水明细<text class="sub">{{flows.length}} 条</text>
+    </view>
+    <view wx:for="{{flows}}" wx:key="index" class="flow-row">
+      <view class="flow-left">
+        <text class="flow-type {{item.typeClass}}">{{item.typeText}}</text>
+        <text class="flow-name">{{item.materialName}}</text>
+        <text class="flow-src">{{item.source}}</text>
+      </view>
+      <view class="flow-right">
+        <text class="flow-qty {{item.typeClass}}">{{item.amountText}}</text>
+        <text class="flow-bal">{{item.qtyVal}}{{item.qtyUnit}} · {{item.date}}　结余{{item.balance}}{{item.qtyUnit}}</text>
+      </view>
+    </view>
+    <view wx:if="{{!flows.length}}" class="t-caption">暂无符合条件的流水记录</view>
+  </view>
+
+  <date-picker-sheet show="{{dpStart}}" title="选择起始日期" value="{{dateStart}}" bind:change="onDateStart" bind:confirm="closeDate" bind:cancel="closeDate" />
+  <date-picker-sheet show="{{dpEnd}}" title="选择结束日期" value="{{dateEnd}}" bind:change="onDateEnd" bind:confirm="closeDate" bind:cancel="closeDate" />
+</view>

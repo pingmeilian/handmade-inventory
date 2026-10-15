@@ -1,0 +1,77 @@
+/* custom-tab-bar/index.wxss —— 自定义底部导航栏
+   ⚠️ 自定义组件不在 page 作用域内，**拿不到 app.wxss 的全局 CSS 变量**，
+      所以本组件里**一个颜色都不许写死** —— 全部由 index.js 读主题后经内联 style 传入
+      （见 index.wxml 的 th.*）。只在这里写布局与动效。
+      守卫 tests/guard-theme.test.js 盯着：本文件出现十六进制色值即红。 */
+
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  height: calc(110rpx + env(safe-area-inset-bottom)); /* 适度加高，给中间按钮呼吸空间 */
+  display: flex; align-items: center;
+  /* 浅色半透明磨砂质感（颜色走内联：背景 / 上边缘线 / 淡阴影） */
+  -webkit-backdrop-filter: blur(20rpx) saturate(180%);
+  backdrop-filter: blur(20rpx) saturate(180%);
+  /* V100：通栏毛玻璃的**顶部圆弧**（设计稿 22px = 44rpx）——
+     底栏从"屏幕底的一条直边"变成"一张从底部长出来的卡片"，
+     FAB 正好骑在这条弧线上；页面内容从弧线两侧滚过时靠 backdrop-filter 真正被糊开。
+     ⚠️ 这是**形状**不是颜色，所以它属于组件本身、对所有主题一致生效
+     （本文件依旧一个色值都不许写 —— 守卫盯着）。 */
+  border-radius: 44rpx 44rpx 0 0;
+  z-index: 200;
+  padding-bottom: env(safe-area-inset-bottom); /* 适配底部安全边距 */
+}
+.tab-item {
+  flex: 1; height: 110rpx;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+
+/* 两侧 Tab：单色线性图标（用 mask 着色，颜色由内联 style 给），小尺寸轻量 */
+.tab-icon {
+  width: 40rpx; height: 40rpx;
+  -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; -webkit-mask-size: contain;
+  mask-repeat: no-repeat; mask-position: center; mask-size: contain;
+}
+.tab-text { font-size: 20rpx; margin-top: 5rpx; }
+
+/* 各 Tab 图标（24x24 线性 SVG，mask 着色） */
+.ico-0 { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='%23333'%3E%3Crect x='3' y='3' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1.5'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1.5'/%3E%3C/g%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='%23333'%3E%3Crect x='3' y='3' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1.5'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1.5'/%3E%3C/g%3E%3C/svg%3E"); }
+.ico-1 { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M21 8 12 3 3 8v8l9 5 9-5z'/%3E%3Cpath d='M3 8l9 5 9-5'/%3E%3Cpath d='M12 13v8'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M21 8 12 3 3 8v8l9 5 9-5z'/%3E%3Cpath d='M3 8l9 5 9-5'/%3E%3Cpath d='M12 13v8'/%3E%3C/svg%3E"); }
+.ico-3 { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.6'/%3E%3Cpath d='M21 15l-5-5L5 21'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.6'/%3E%3Cpath d='M21 15l-5-5L5 21'/%3E%3C/svg%3E"); }
+.ico-4 { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4 4-6 8-6s8 2 8 6'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4 4-6 8-6s8 2 8 6'/%3E%3C/svg%3E"); }
+
+/* 中间圆形加号（主操作入口，放大、凸起、干净无装饰） */
+.tab-action { position: relative; }
+.plus-circle {
+  position: absolute; left: 50%; top: -42rpx;
+  transform: translateX(-50%);
+  width: 96rpx; height: 96rpx; border-radius: 50%; /* 比普通图标大一圈，最醒目 */
+  display: flex; align-items: center; justify-content: center;
+  font-size: 52rpx; line-height: 1;
+  z-index: 1;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* 按下只做轻微缩放 —— 不换色（换色就得写死第二个色值，主题一换就露馅） */
+.plus-circle:active { transform: translateX(-50%) scale(0.94); }
+
+/* 快速记录面板（中间加号点开） */
+.qmask {
+  position: fixed; left: 0; right: 0; top: 0; bottom: 0;
+  z-index: 300;
+  display: flex; align-items: flex-end;
+}
+.qsheet {
+  width: 100%;
+  border-radius: 28rpx 28rpx 0 0;
+  padding: 36rpx 32rpx calc(48rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  animation: sheetUp 0.26s ease;
+}
+.qsheet-title { font-size: 32rpx; font-weight: 600; text-align: center; margin-bottom: 28rpx; }
+.qrow { display: flex; }
+.qitem {
+  flex: 1; text-align: center; padding: 30rpx 6rpx; margin: 0 8rpx;
+  border-radius: 16rpx;
+  font-size: 26rpx; font-weight: 600;
+}
+/* 同理：按下用透明度，不换色 */
+.qitem:active { opacity: 0.82; }

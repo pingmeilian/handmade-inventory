@@ -1,0 +1,154 @@
+<!-- pages/cut-editor/cut-editor.wxml —— 裁剪排版（四区带）· 2026-09-30 V83–V93 -->
+<!-- 两种进入方式合并成同一套界面：
+     ① ?mode=queue  生产流程（做 N 件）→ 初始 N 片，回传逐件结构
+     ② ?id=…        成品编辑（选一块料 / 行内剪裁）→ 初始 1 片，回传这一行用的全部片 -->
+<!-- 四区带：① 换布（给当前这一片）② 剪裁区（用到几块布画几块）③ 片列表（每片：布 + 长 + 宽 + 转90°）④ 确认 -->
+
+<!-- 收不到裁剪任务时的兜底：给一句人话，**绝不白屏**（V80 白屏的教训） -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view wx:if="{{loadErr}}" class="empty-tip">没收到裁剪任务，请返回上一页重试</view>
+
+<view wx:else class="editor">
+
+  <!-- ① 换布：点一块布 = 把**当前选中的那一片**挪过去（选中的四周发光；✓放得下 / ✕放不下）
+       V111：**左边固定一块物料照片**（物料详情里那张，与物料列表页同一个字段）。
+       它与 ② 区的滑动是**两层**：这里管"同一物料内换哪块布"，②区左右滑管"换哪个物料"；
+       照片跟着物料走 —— 用户原话「滑动剪裁区换物料，图片就换成另外一个物料的图片」。 -->
+  <view class="strip-row">
+    <view class="strip-photo">
+      <image wx:if="{{curMat.photo}}" class="strip-photo-img" src="{{curMat.photo}}" mode="aspectFill"></image>
+      <!-- 没照片：用「物料名首字 + 分类色」占位（与物料列表里那张方块同一口径，V112）。
+           ⚠️ 别写"无图"两个字：那是信息不是识别，用户要的是"一眼认出这是哪个料"。 -->
+      <view wx:else class="strip-photo-ph ph-fill"
+            style="background:{{curMat.phColor}};color:{{curMat.phInk}};">{{curMat.placeholder}}</view>
+    </view>
+    <scroll-view wx:if="{{pieces.length}}" scroll-x class="strip" enhanced show-scrollbar="{{false}}">
+      <view class="strip-inner">
+        <view wx:for="{{pieces}}" wx:key="id"
+              class="strip-card {{item.on?'on':''}} {{item.sized ? (item.fits?'fit':'no') : ''}}"
+              data-id="{{item.id}}" bindtap="pickBoard">
+          <view class="strip-shape" style="width:{{item.thumb.w}}rpx;height:{{item.thumb.h}}rpx;">
+            <view wx:for="{{item.thumb.holes}}" wx:for-item="h" wx:key="k" class="strip-hole"
+                  style="left:{{h.left}}rpx;top:{{h.top}}rpx;width:{{h.w}}rpx;height:{{h.h}}rpx;"></view>
+          </view>
+          <view class="strip-meta">
+            <text class="strip-size">{{item.label}}</text>
+            <text class="strip-kind">{{item.offcut ? '碎料' : '整布'}}</text>
+          </view>
+          <!-- 三态（V113c）：没填尺寸**不下结论**（sheetsFit 对 0×0 恒 false，
+               二值文案会让换布卡一进来就全员「✕ 放不下」—— 用户真机问的就是这个） -->
+          <text wx:if="{{item.sized}}" class="strip-fit {{item.fits ? 'ok' : 'bad'}}">{{item.fits ? '✓ 放得下' : '✕ 放不下'}}</text>
+          <text wx:else class="strip-fit idle">填尺寸后判断</text>
+        </view>
+      </view>
+    </scroll-view>
+    <view wx:else class="empty-tip strip-empty">这个物料还没有在库的布片</view>
+  </view>
+
+  <!-- ② 剪裁区：**按物料分屏**（V111）—— 左右滑换物料，屏内是该物料的布块（纵向堆叠）。
+       ⚠️ 这个区域**一个字都不放**（V86 铁律）：它随时会有裁片拖出来，任何文字都可能被压住。
+       点某一片 = 选中它；按住拖 = 在那块布上挪位置（贴轮廓自动吸附、到布边就停）。
+       ⚠️ 用 swiper 而不是 scroll-view 横滑：只有 swiper 有"一屏一个 + 边缘回弹 + 指示点"。
+       ⚠️ 高度靠 .stage 的 flex:1 撑，别写死（写死换个机型就错）。 -->
+  <swiper class="stage" current="{{matIdx}}" bindchange="onMatSwipe"
+          indicator-dots="{{matGroups.length > 1}}"
+          indicator-color="rgba(0,0,0,0.10)" indicator-active-color="rgba(0,0,0,0.32)">
+    <swiper-item wx:for="{{matGroups}}" wx:key="matId" wx:for-item="grp">
+      <view wx:if="{{grp.boards.length}}" class="board-stack">
+        <view wx:for="{{grp.boards}}" wx:for-item="bd" wx:key="pieceId" class="board-cell">
+          <view class="canvas" style="width:{{bd.wrapW}}rpx;height:{{bd.wrapH}}rpx;">
+            <view class="cloth" style="left:{{bd.pad}}rpx;top:{{bd.pad}}rpx;width:{{bd.w}}rpx;height:{{bd.h}}rpx;">
+              <view wx:for="{{bd.holes}}" wx:for-item="h" wx:key="k" class="cloth-hole"
+                    style="left:{{h.left}}rpx;top:{{h.top}}rpx;width:{{h.w}}rpx;height:{{h.h}}rpx;"></view>
+            </view>
+            <!-- 绿红块是布的**兄弟节点**（不能塞进 .cloth，否则布外那截被裁掉） -->
+            <block wx:for="{{bd.cuts}}" wx:for-item="c" wx:key="no">
+              <view wx:for="{{c.green}}" wx:for-item="g" wx:key="k" class="cut-green"
+                    style="left:{{g.left}}rpx;top:{{g.top}}rpx;width:{{g.w}}rpx;height:{{g.h}}rpx;"></view>
+              <view wx:for="{{c.red}}" wx:for-item="d" wx:key="k" class="cut-red"
+                    style="left:{{d.left}}rpx;top:{{d.top}}rpx;width:{{d.w}}rpx;height:{{d.h}}rpx;"></view>
+            </block>
+            <!-- 每片自己的抓手：按上去就选中并开始拖 -->
+            <view wx:for="{{bd.cuts}}" wx:for-item="c" wx:key="no"
+                  class="piece-hit {{c.active?'on':''}}"
+                  style="left:{{c.boxLeft}}rpx;top:{{c.boxTop}}rpx;width:{{c.boxW}}rpx;height:{{c.boxH}}rpx;"
+                  data-no="{{c.no}}"
+                  catchtouchstart="onPieceDown" catchtouchmove="onPieceMove"
+                  catchtouchend="onPieceUp" catchtouchcancel="onPieceUp"></view>
+          </view>
+          <!-- 布片标识（V111）：布片**数据里没有名字**，这是"仅供这一屏看"的序号 + 尺寸 + 整布/碎料 -->
+          <view class="board-tag">{{bd.tag}}</view>
+        </view>
+      </view>
+      <view wx:else class="empty-tip">这个物料还没有布块</view>
+    </swiper-item>
+  </swiper>
+
+  <!-- ③ 片列表：**只列当前物料**的片，每片一行（用哪块布 + 长 + 宽 + 转90° 都能改）。
+       ⚠️ 「做 N 件」= **件数**；「裁 M 片」= **当前这个物料**要裁的片数（不是总数）——
+          V91 定的"件数与片数分开"，V111 又把"片数"收窄到**按物料**
+          （用户原话「做2件 物料：1/2 裁2片」）。片数减到 1 就是"这批合起来裁一块大的"。 -->
+  <view class="part-bar">
+    <view class="part-head">
+      <view class="part-title">
+        <!-- V112：这一行**只放物料名 + 第几个/共几个**。
+             「做 N 件」移到导航栏（裁剪排版 · 2件）—— 「裁 N 片」删掉：
+             片数可以合并（减到 1 就是"这批合起来裁一块大的"），那个数字对用户没有意义。 -->
+        <text wx:if="{{curMat.matName}}">{{curMat.matName}} </text>
+        <text class="part-mat-no">{{curMat.no}}/{{curMat.total}}</text>
+      </view>
+      <view class="part-ops">
+        <view class="segment unit-seg">
+          <view class="segment-item {{unit==='cm'?'active':''}}" data-u="cm" bindtap="pickUnit">cm</view>
+          <view class="segment-item {{unit==='m'?'active':''}}" data-u="m" bindtap="pickUnit">m</view>
+        </view>
+        <text class="part-mini" bindtap="removePiece">− 一片</text>
+        <text class="part-mini" bindtap="addPiece">+ 一片</text>
+      </view>
+    </view>
+    <scroll-view scroll-y class="part-list">
+      <!-- ⚠️ block 包一层：wx:for 给 index（**原数组下标** —— data-i 传的就是它，不能错位），
+           wx:if 只筛出"当前物料"的片（V111：一屏一个物料，列表也只列这个物料的）。 -->
+      <block wx:for="{{parts}}" wx:key="no">
+        <view wx:if="{{item.inCurMat}}"
+              class="part-row {{item.active?'on':''}} {{item.bad?'bad':''}}"
+              data-i="{{index}}" bindtap="pickPart">
+          <text class="part-no">{{item.no}}</text>
+          <text class="part-board">{{item.noSize ? '填尺寸' : item.boardLabel}}</text>
+          <view class="part-field">
+            <text class="part-unit">长</text>
+            <ph-input ph-class="part-input" type="digit" value="{{item.len}}"
+                      adjust-position="{{true}}" cursor-spacing="24"
+                      data-i="{{index}}" bind:input="setPartLen" placeholder="长" />
+          </view>
+          <view class="part-field">
+            <text class="part-unit">宽</text>
+            <ph-input ph-class="part-input" type="digit" value="{{item.wid}}"
+                      adjust-position="{{true}}" cursor-spacing="24"
+                      data-i="{{index}}" bind:input="setPartWid" placeholder="宽" />
+          </view>
+          <text class="part-cm">{{unit}}</text>
+          <!-- 每片**自己**转 90°（V93）：布有织向，摆哪个方向是用户的决定。
+               用 catchtap —— 别被这一行的 pickPart 抢走（点它是"转"，不是"选中"）。 -->
+          <text class="part-rot {{item.rot?'on':''}}" data-i="{{index}}" catchtap="rotPart">转90°</text>
+        </view>
+      </block>
+    </scroll-view>
+  </view>
+
+  <!-- ④ 确认与取消（固定底部）。
+       ⚠️ 文案是「就这样裁」不是「用这块料」（V94 用户拍板）：多块布 / 多片之后，
+          「用这块料」说不通到底是哪一块；这一屏定的是**整批的排法**，而且**不扣料**
+          （扣料在保存成品 / 生产确认时）。
+       ⚠️ V112 案B：**多物料且还有没看过的物料时，这个按钮不是"确认"，是"下一个"** ——
+          文案变成「还有 N 个物料 ›」，点了跳到下一个没看过的物料；全看过了才变回「就这样裁」。
+          为什么必须这样：autoPlaceAll() 已经替所有物料把片摆好了，光靠提示语说不清，
+          得让按钮本身**逼用户把每个物料都看过一遍**。 -->
+  <view class="ops">
+    <view class="btn btn-secondary btn-large" bindtap="cancel">取消</view>
+    <view class="btn btn-primary btn-large {{canConfirm ? '' : 'disabled'}}"
+          bindtap="confirm">{{confirmText}}</view>
+  </view>
+  <view class="safe-bottom"></view>
+</view>

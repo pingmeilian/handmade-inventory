@@ -1,0 +1,208 @@
+<!-- pages/products/list.wxml —— 作品集总库 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap pin-page">
+
+  <!-- ⚠️ 2026-10-04：顶部**不再**放空间切换胶囊（理由同 pages/materials/list.wxml：
+       三个 tab 页挂同一排太重复，切换只留在「看板」一处）。 -->
+
+  <!-- V116：整块固定（灰框内）—— 工具条 + 分类分段 + 计数行 -->
+  <view class="pin-band" id="pinBand">
+  <view class="toolbar">
+    <view class="filter-btn" bindtap="toggleFilter">
+      <text>筛选</text>
+      <text wx:if="{{activeFilterCount>0}}" class="filter-badge">{{activeFilterCount}}</text>
+    </view>
+    <view class="search-wrap">
+      <ph-input ph-class="top-search" placeholder="搜索名称 / 品类 / 备注" value="{{searchText}}" confirmType="search" bind:input="onSearchInput" />
+    </view>
+    <view class="view-toggle" bindtap="toggleRenderMode">{{renderMode==='list'?'鸟瞰':'列表'}}</view>
+  </view>
+
+  <!-- 二级 Tab：左侧独立按钮【作品集】 + 右侧长条胶囊（商品 / 样品） -->
+  <view class="cat-bar">
+    <view class="cat-standalone {{view==='all'?'on':''}}" data-v="all" bindtap="selectCat">作品集</view>
+    <view class="cat-capsule">
+      <view class="cat-cap {{view==='merch'||view==='sold'?'on':''}}" data-v="merch" bindtap="selectCat">商品</view>
+      <view class="cat-cap {{view==='sample'?'on':''}}" data-v="sample" bindtap="selectCat">样品</view>
+    </view>
+  </view>
+  <view wx:if="{{view==='merch'||view==='sold'}}" class="cat-sub">
+    <view class="cat-sub-seg {{view==='merch'?'on':''}}" data-v="merch" bindtap="selectCat">待售</view>
+    <view class="cat-sub-seg {{view==='sold'?'on':''}}" data-v="sold" bindtap="selectCat">已售</view>
+  </view>
+  <view class="summary">{{headerSummary}}</view>
+  </view>
+  <view class="pin-band-ph" style="height:{{bandH}}px;"></view>
+
+  <!-- V117：奶黄圆角面板 —— 包住分界线以下的全部内容（顶角 44rpx、左右贴边）；
+       min-height 用带高清出来：内容少时也铺到屏幕底，面板下面不露页面底色。 -->
+  <view class="content-panel" style="min-height:calc(100vh - {{bandH}}px);">
+
+  <!-- 筛选弹层（覆盖列表，半透明遮罩；取消可还原） -->
+  <view wx:if="{{filterOpen}}" class="mask" bindtap="closeFilter">
+    <view class="filter-panel" catchtap="noop">
+      <view class="fp-title">筛选与排序</view>
+      <view class="fp-feedback">共 {{filteredCount}} 件<text wx:if="{{selectedKeywords.length>0}}"> · 已选 {{selectedKeywords.length}} 个关键词</text></view>
+      <view class="fp-label">关键词（可多选）</view>
+      <view class="chips">
+        <view wx:for="{{kwOptions}}" wx:key="id" class="chip {{selectedKwMap[item.id]?'on':''}}" data-id="{{item.id}}" bindtap="toggleKeyword">
+          <text>{{item.name}}</text>
+          <text wx:if="{{selectedKwMap[item.id]}}" class="chip-check"> ✓</text>
+        </view>
+        <view wx:if="{{kwOptions.length===0}}" class="fp-empty">暂无可选关键词</view>
+      </view>
+      <view class="fp-label">排序（再次点击同一项取消）</view>
+      <view class="sort-list">
+        <view wx:for="{{sortOptions}}" wx:key="index" wx:for-index="ridx" wx:for-item="row" class="sort-row">
+          <view wx:for="{{row}}" wx:key="key" wx:for-item="cell" class="sort-cell {{sortKey===cell.key?'on':''}}" data-k="{{cell.key}}" bindtap="setSort">
+            <text>{{cell.name}}</text>
+            <text wx:if="{{sortKey===cell.key}}" class="sort-check">✓</text>
+          </view>
+        </view>
+      </view>
+      <block wx:if="{{view==='sold'}}">
+        <view class="fp-label">时间范围</view>
+        <view class="chips">
+          <view wx:for="{{timeRanges}}" wx:key="key" class="chip {{timeRange===item.key?'on':''}}" data-k="{{item.key}}" bindtap="setTimeRange">{{item.name}}</view>
+        </view>
+      </block>
+      <view class="fp-actions">
+        <view class="fp-btn ghost" bindtap="closeFilter">取消</view>
+        <view class="fp-btn ghost" bindtap="clearFilter">清除</view>
+        <view class="fp-btn primary" bindtap="applyFilter">完成</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 统计行已移入顶部固定带（V116） -->
+
+  <!-- 列表视图 -->
+  <view wx:if="{{renderMode==='list'}}" class="list">
+    <block wx:for="{{list}}" wx:key="id">
+      <view wx:if="{{item.kind==='prod'}}" class="std-card" data-id="{{item.id}}" bindtap="goDetail" bindlongpress="onLongPress">
+        <view class="std-left">
+          <image wx:if="{{item.thumb}}" class="std-thumb" src="{{item.thumb}}" mode="aspectFill" />
+          <view wx:else class="std-thumb ph-fill" style="background:{{item.color}};color:{{item.ink}}">{{item.placeholder}}</view>
+          <view class="std-body">
+            <view class="std-title">{{item.name}}</view>
+            <view class="std-sub card-pc">{{item.pcName}}</view>
+          </view>
+        </view>
+        <view class="std-right" wx:if="{{view==='all'}}">
+          <view class="std-dual-label">在库构成</view>
+          <view class="std-dual">
+            <view class="std-dual-side merch" data-id="{{item.id}}" catchtap="goMerch">
+              <text class="std-dual-badge">商品</text>
+              <text class="std-dual-num">{{item.sellableStock}}</text>
+            </view>
+            <view class="std-dual-sep"></view>
+            <view class="std-dual-side sample" data-id="{{item.id}}" catchtap="goSample">
+              <text class="std-dual-badge">样品</text>
+              <text class="std-dual-num">{{item.sampleStock}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="std-right" wx:elif="{{view==='merch'}}">
+          <view class="std-single">
+            <view class="std-merch-head">
+              <text class="badge merch">商品·待售</text>
+              <text class="std-qty">{{item.sellableStock}} 件</text>
+            </view>
+            <text class="meta">{{item.priceTxt}} · {{item.profitTxt}}</text>
+            <text class="meta">{{item.costTxt}} · 率 {{item.rateTxt}}</text>
+          </view>
+        </view>
+        <view class="std-right" wx:elif="{{view==='sample'}}">
+          <view class="std-single">
+            <text class="badge sample">样品</text>
+            <text class="meta">{{item.costTxt}} · 不出利润</text>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="std-card sale" data-id="{{item.productId}}" bindtap="goDetail">
+        <image wx:if="{{item.thumb}}" class="std-thumb" src="{{item.thumb}}" mode="aspectFill" />
+        <view wx:else class="std-thumb ph-fill" style="background:{{item.color}};color:{{item.ink}}">{{item.placeholder}}</view>
+        <view class="std-body">
+          <view class="std-title">{{item.name}}</view>
+          <view class="sale-meta">售出 {{item.date}} · {{item.qty}}件 · +¥{{item.profit}} 利润 · 率{{item.rateTxt}}</view>
+        </view>
+      </view>
+    </block>
+    <view wx:if="{{list.length===0}}" class="empty">作品集还空着，点底部中间 + 新建，或去灵感 / 想做一键转入</view>
+  </view>
+
+  <!-- 鸟瞰视图 -->
+  <view wx:else class="grid">
+    <view wx:for="{{list}}" wx:key="id" class="cell" data-id="{{item.kind==='sale'?item.productId:item.id}}" bindtap="goDetail" bindlongpress="onLongPress">
+      <image wx:if="{{item.thumb}}" class="cell-img" src="{{item.thumb}}" mode="aspectFill" />
+      <view wx:else class="cell-img ph-fill" style="background:{{item.color}};color:{{item.ink}}">{{item.placeholder}}</view>
+      <view class="cell-name">{{item.name}}</view>
+      <view class="cell-badge {{item.kind==='sale'?'sold':(item.sampleStock>0?'sample':'merch')}}">
+        <block wx:if="{{item.kind==='sale'}}">已售</block>
+        <block wx:elif="{{item.sampleStock>0}}">样品 {{item.sampleStock}}</block>
+        <block wx:else>商品 {{item.sellableStock}}</block>
+      </view>
+    </view>
+    <view wx:if="{{list.length===0}}" class="empty">作品集还空着</view>
+  </view>
+
+  <!-- 长按菜单 -->
+  <view wx:if="{{showAction}}" class="mask" bindtap="closeAction">
+    <view class="action-sheet" catchtap="noop">
+      <view class="as-title">{{actionProd.name}}</view>
+      <!-- 菜单按长按时所处的视图区分：商品视图能卖（生产的成品入「商品库」= 可售），
+           样品视图只能出库或转回商品 —— 之前不管在哪个视图都显示同一套，容易出现
+           「样品怎么还要转为样品」这种无意义项 -->
+      <block wx:if="{{actionView!=='sample'}}">
+        <view class="as-item" bindtap="actionProduce">增加数量（入商品库 · 生产）</view>
+        <view class="as-item" bindtap="actionSell">卖出</view>
+        <view wx:if="{{actionProd.sellableStock>0}}" class="as-item" bindtap="actionToSample">转为样品</view>
+      </block>
+      <block wx:else>
+        <view wx:if="{{actionProd.sampleStock>0}}" class="as-item" bindtap="actionDiscard">出库</view>
+        <view wx:if="{{actionProd.sampleStock>0}}" class="as-item" bindtap="actionToMerch">转为商品</view>
+      </block>
+      <view class="as-cancel" bindtap="closeAction">取消</view>
+    </view>
+  </view>
+
+  <!-- 数量输入面板：居中弹窗 + 上抬，键盘不遮挡 -->
+  <view wx:if="{{showQtyInput}}" class="mask mask-center" bindtap="closeQtyInput">
+    <view class="qty-panel" catchtap="noop">
+      <view class="qty-title">{{qtyTitle}}</view>
+      <ph-input ph-class="qty-input" type="number" value="{{qtyValue}}" bind:input="onQtyInput" focus />
+      <!-- 这批实际用料（V74；2026-09-30 V92 收窄）：只列**不走裁剪界面**的行 ——
+           辅料、按批估量的刀口布，以及极少数没有长宽的面积面料行。
+           有长宽的面料行归裁剪界面管（每片各自填长宽、各自选布），这里不再出现。 -->
+      <view wx:if="{{qtyMode==='produce' && usageLines.length}}" class="usage-block">
+        <view class="usage-head" bindtap="toggleUsage">
+          <text class="usage-title">这批实际用料</text>
+          <text class="usage-toggle">{{usageExpanded ? '收起' : '可改'}}</text>
+        </view>
+        <view wx:if="{{usageExpanded}}" class="usage-list">
+          <view wx:for="{{usageLines}}" wx:key="materialId" class="usage-row">
+            <view class="usage-line">
+              <view class="usage-info">
+                <text class="usage-name">{{item.name}}</text>
+                <text class="usage-spec">{{item.spec}}</text>
+              </view>
+              <!-- ⚠️ 必须包一层定宽容器：ph-input 组件根节点自带 width:100%，
+                   裸放进 flex 行会撑满整行、把物料名挤成一列（2026-09-28 真机崩版） -->
+              <view class="usage-input-wrap">
+                <ph-input ph-class="usage-input" type="digit" value="{{item.input}}" data-i="{{index}}" bind:input="onUsageInput" />
+              </view>
+              <text class="usage-unit">{{item.unit}}</text>
+            </view>
+          </view>
+          <view class="usage-tip">不改就按标准用量扣；要改就填这一批实际用掉的量</view>
+        </view>
+      </view>
+      <view class="qty-actions">
+        <view class="fp-btn ghost" bindtap="closeQtyInput">取消</view>
+        <view class="fp-btn primary" bindtap="confirmQty">确定</view>
+      </view>
+    </view>
+  </view>
+  </view>
+</view>

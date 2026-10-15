@@ -1,0 +1,214 @@
+/* pages/materials/detail.wxss —— 物料详情 */
+
+/* 图集缩略图：面料实拍图在前，订单截图在后；横向滚动，固定高度卡片 */
+.photo-card {
+  height: 200rpx; padding: 20rpx 0 20rpx 24rpx;
+  overflow: hidden; position: relative;
+  background: var(--color-surface);
+}
+/* 横向滚动容器 */
+.photo-scroll {
+  width: 100%; height: 160rpx;
+  white-space: nowrap;
+}
+/* 缩略图项：统一等高、等宽、圆角 */
+.thumb-item {
+  display: inline-block;
+  width: 160rpx; height: 160rpx;
+  margin-right: 16rpx; border-radius: 16rpx;
+  overflow: hidden; position: relative;
+  vertical-align: middle;
+}
+.thumb-item:last-child { margin-right: 0; }
+.thumb-img { width: 100%; height: 100%; display: block; }
+/* 订单截图小角标 */
+.thumb-badge {
+  position: absolute; left: 8rpx; top: 8rpx; z-index: 2;
+  padding: 4rpx 12rpx; border-radius: 999rpx;
+  background: var(--color-primary); color: var(--color-primary-on);
+  font-size: 18rpx; line-height: 1.4;
+}
+/* 右下角总数量标识 */
+.photo-count {
+  position: absolute; right: 24rpx; bottom: 20rpx; z-index: 2;
+  padding: 6rpx 18rpx; border-radius: 999rpx;
+  background: var(--color-mask); color: #FFFFFF;
+  font-size: 22rpx; line-height: 1.4;
+}
+
+.head-top { display: flex; align-items: center; justify-content: space-between; }
+.head-name { font-size: 36rpx; font-weight: 600; color: var(--color-text-1); }
+.head-sub { font-size: 24rpx; color: var(--color-text-2); margin-top: 10rpx; }
+.head-stock { display: flex; align-items: baseline; gap: 16rpx; margin-top: 28rpx; }
+.stock-label { font-size: 26rpx; color: var(--color-text-2); }
+.stock-value { font-size: 40rpx; font-weight: 600; color: var(--color-text-1); font-variant-numeric: tabular-nums; }
+.head-th { font-size: 22rpx; color: var(--color-text-3); margin-top: 10rpx; }
+
+.attr-grid { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.attr-item { background: var(--color-surface-2); border-radius: var(--radius-inner); padding: 14rpx 22rpx; }
+.attr-k { font-size: 22rpx; color: var(--color-text-3); margin-right: 12rpx; }
+.attr-v { font-size: 26rpx; color: var(--color-text-1); font-weight: 500; }
+
+.piece-row { display: flex; align-items: center; gap: 20rpx; padding: 16rpx 0; border-bottom: 1rpx solid var(--color-divider); }
+.piece-row:last-child { border-bottom: none; }
+.piece-thumb {
+  width: 160rpx; height: 150rpx; flex: none;
+  position: relative;              /* 放大镜角标要定位在里面（V113 加） */
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-surface-2); border-radius: var(--radius-inner);
+  overflow: hidden; padding: 0 8rpx;
+}
+/* 布片真实形状（V82）：外框按真实长宽比缩略，已有的缺口用「空白色块 + 虚线边」表示 */
+.piece-shape {
+  position: relative; flex: none;
+  background: #F5E6D3;
+  border: 1rpx solid #D8C4A8;
+  border-radius: 6rpx;
+  overflow: hidden;
+  /* 轻布纹，表达"这是一块布" */
+  background-image: repeating-linear-gradient(to bottom,
+    rgba(196,166,122,0) 0, rgba(196,166,122,0) 6rpx,
+    rgba(196,166,122,.20) 6rpx, rgba(196,166,122,.20) 8rpx);
+}
+/* 裁走的那一块：露出底色（纸感）+ 虚线边，一眼看出"这里已经没料了" */
+.piece-hole {
+  position: absolute;
+  background: var(--color-surface-2);
+  border: 1rpx dashed #C9BCA9;
+}
+
+.piece-right { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10rpx; flex: none; }
+.piece-more { font-size: 36rpx; color: var(--color-text-3); line-height: 1; padding: 4rpx 10rpx; }
+.piece-info { flex: 1; display: flex; flex-direction: column; gap: 6rpx; }
+.piece-size { font-size: 26rpx; color: var(--color-text-1); }
+.piece-area { font-size: 24rpx; color: var(--color-text-2); font-variant-numeric: tabular-nums; }
+
+.flow-row { display: flex; align-items: center; justify-content: space-between; padding: 18rpx 0; border-bottom: 1rpx solid var(--color-divider); }
+.flow-row:last-child { border-bottom: none; }
+.flow-left { flex: 1; min-width: 0; }
+.flow-type { font-size: 26rpx; font-weight: 600; margin-right: 14rpx; }
+.flow-remark { font-size: 22rpx; color: var(--color-text-3); }
+.flow-right { text-align: right; flex: none; }
+.flow-qty { font-size: 28rpx; font-weight: 600; font-variant-numeric: tabular-nums; }
+.flow-price { font-size: 22rpx; color: var(--color-text-2); display: block; margin-top: 2rpx; font-variant-numeric: tabular-nums; }
+.flow-bal { font-size: 20rpx; color: var(--color-text-3); display: block; margin-top: 2rpx; }
+.flow-undo { font-size: 22rpx; color: var(--color-danger); display: inline-block; margin-top: 6rpx; padding: 2rpx 16rpx; background: #FBEAE6; border-radius: 999rpx; }
+
+.ops { display: flex; gap: 16rpx; margin-top: 24rpx; margin-bottom: 16rpx; }
+.ref-note { margin-bottom: 16rpx; }
+.del-btn { margin-top: 8rpx; }
+
+/* 操作面板 */
+.mask { position: fixed; inset: 0; background: var(--color-mask); z-index: 100; display: flex; align-items: flex-end; }
+.mask.mask-center { align-items: center; justify-content: center; }
+.sheet { width: 100%; background: var(--color-surface); border-radius: 32rpx 32rpx 0 0; padding: 36rpx 32rpx calc(36rpx + env(safe-area-inset-bottom)); }
+.sheet.sheet-center { width: 84%; max-width: 620rpx; border-radius: var(--radius-card); padding: 40rpx 32rpx; margin-bottom: 20vh; box-sizing: border-box; }
+.sheet-title { font-size: 32rpx; font-weight: 600; margin-bottom: var(--space-md); color: var(--color-text-1); }
+
+/* 统一表单行：标签与输入框同行、行间距一致，输入框加高 + 柔和圆角 + 文字垂直居中 */
+.sheet .field {
+  display: flex; align-items: center;
+  margin-bottom: 22rpx;
+}
+.sheet .field-label {
+  width: 210rpx; flex: none;
+  margin-bottom: 0; margin-right: 16rpx;
+  font-size: 24rpx; line-height: 1.3; color: var(--color-text-2);
+}
+.sheet .field-control.input {
+  flex: 1; min-width: 0;
+  /* 高度加大以便看清输入内容：96rpx 总高 - 上下 22rpx 内边距 = 52rpx 行高，垂直居中 */
+  height: var(--input-lg); line-height: 52rpx;
+  padding: 22rpx 24rpx; font-size: 30rpx;
+  border-radius: var(--radius-inner);
+  background: var(--color-surface-2); color: var(--color-text-1);
+}
+/* 辅助提示小字：最多折 2 行，超出省略，不截断语义 */
+.sheet-tip {
+  margin: -4rpx 0 20rpx; padding: 0 4rpx;
+  font-size: 22rpx; line-height: 1.5; color: var(--color-text-3);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+.sheet-ops { display: flex; gap: 20rpx; margin-top: 28rpx; }
+/* 居中的布片盘库清单：内容过多时可滚动 */
+.sheet-center.stocktake-float { max-height: 70vh; overflow-y: auto; }
+.sheet-ops .btn { flex: 1; }
+
+/* 折叠展开区头（布片 / 流水） */
+.sec-head { display: flex; align-items: center; justify-content: space-between; }
+.sec-right { display: flex; align-items: center; gap: 14rpx; }
+.collapse-arrow { font-size: 24rpx; color: var(--color-primary-deep); font-weight: 500; flex: none; }
+.section-title.toggler { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; }
+.section-title.toggler .collapse-arrow { margin-left: auto; }
+.expand-tip { font-size: 24rpx; color: var(--color-primary-deep); text-align: center; padding: 16rpx 0 4rpx; }
+
+/* ===== 盘库面板（浮动布片清单 / 填量面板） ===== */
+.stocktake-tip { font-size: 22rpx; color: var(--color-text-3); margin: 4rpx 0 18rpx; line-height: 1.4; }
+.stk-piece-row {
+  display: flex; align-items: center; gap: 16rpx;
+  padding: 18rpx 16rpx; margin-bottom: 14rpx;
+  background: var(--color-surface-2); border-radius: var(--radius-inner);
+}
+.stk-piece-row .piece-thumb { flex: none; width: 56rpx; height: 56rpx; display: flex; align-items: center; justify-content: center; }
+.stk-piece-row .piece-info { flex: 1; min-width: 0; }
+.stk-piece-row .piece-size { display: block; font-size: 26rpx; color: var(--color-text-1); }
+.stk-piece-row .piece-area { display: block; font-size: 22rpx; color: var(--color-text-3); margin-top: 2rpx; }
+.stk-actions { flex: none; display: flex; gap: 12rpx; }
+.stk-tab {
+  padding: 12rpx 20rpx; font-size: 24rpx; line-height: 1;
+  color: var(--color-primary-deep); background: var(--color-primary-soft);
+  border: 1rpx solid var(--color-primary); border-radius: 10rpx; font-weight: 500;
+}
+.stk-tab.danger { color: #fff; background: var(--color-danger); border-color: var(--color-danger); }
+.stk-tab.disabled { color: var(--color-text-3); background: var(--color-surface); border-color: var(--color-divider); opacity: 0.5; }
+.stk-preview {
+  margin: 6rpx 0 4rpx; padding: 16rpx 18rpx;
+  font-size: 24rpx; color: var(--color-primary-deep);
+  background: var(--color-primary-soft); border-radius: var(--radius-inner); line-height: 1.5;
+}
+
+/* ===== 布片放大镜（V113）===== */
+
+/* 遮罩用**中性深色**而不是 var(--color-mask)：
+   那块布要在这里被看清楚，遮罩越中性越好；主题色遮罩会给布染色，
+   反而让"布本来什么颜色"判断失真（同 V101「布块不跟主题」那条理由）。 */
+.zoom-layer {
+  position: fixed; inset: 0; z-index: 110;
+  background: rgba(24, 22, 20, 0.88);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60rpx 40rpx;
+}
+.zoom-shape-wrap {
+  flex: 1; width: 100%; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+/* 放大图沿用与缩略图**同一套**中性灰白（裁剪页 V111 已把布色定为中性）——
+   同一块布在两个界面必须是同一个颜色，否则用户会以为是两块不同的布。 */
+.zoom-shape {
+  position: relative; flex: none;
+  background: #EFEFEC;
+  border: 2rpx solid #D8D6D0; border-radius: 10rpx; overflow: hidden;
+  background-image: repeating-linear-gradient(to bottom,
+    rgba(150,150,148,0) 0, rgba(150,150,148,0) 10rpx,
+    rgba(150,150,148,0.05) 10rpx, rgba(150,150,148,0.05) 11rpx);
+}
+.zoom-hole { position: absolute; background: rgba(24,22,20,0.55); border: 2rpx dashed rgba(255,255,255,0.55); }
+
+.zoom-size { margin-top: 20rpx; font-size: 32rpx; color: #FFFFFF; font-weight: 500; }
+.zoom-tags { margin-top: 10rpx; display: flex; gap: 10rpx; }
+.zoom-tag {
+  font-size: 24rpx; color: rgba(255,255,255,0.72);
+  padding: 6rpx 20rpx; border: 1rpx solid rgba(255,255,255,0.28); border-radius: 999rpx;
+}
+/* 「已裁 N 处」用实色一点点的深色底：它是**状态**（这块布被动过），
+   和「整布/碎料」这种**类别**标签区分开。 */
+.zoom-tag.cut { color: #FFFFFF; background: rgba(226, 75, 74, 0.35); border-color: rgba(226, 75, 74, 0.6); }
+.zoom-tip { margin-top: 26rpx; font-size: 22rpx; color: rgba(255,255,255,0.5); }
+
+/* 缩略图可长按的提示：右上角一个很轻的放大镜角标。
+   ⚠️ 只做"暗示"不做"教程" —— 长按自带 350ms 判定与震动，加角标已够，
+   再加引导层就是打扰（用户明确反感"界面里一个都不许放"那种多余文字，V86）。 */
+.piece-thumb::after {
+  content: '⤢'; position: absolute; right: 6rpx; bottom: 4rpx;
+  font-size: 20rpx; color: var(--color-text-3); line-height: 1;
+}

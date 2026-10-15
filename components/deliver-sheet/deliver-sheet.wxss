@@ -1,0 +1,93 @@
+/* components/deliver-sheet/deliver-sheet.wxss —— 排单交付弹窗（V149）
+   ⚠️ 自定义组件样式默认隔离 —— 全局 .mask/.btn/.sheet **在这一层不生效**，
+      所以这里自带一套 ds- 前缀的样式（与项目其它组件一致）。
+      但主题变量（--color-*、--radius-*、--space-*）是从页面根节点继承下来的，可以放心用。 */
+
+.ds-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--color-mask);
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+}
+
+.ds-sheet {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-surface);
+  border-radius: 28rpx 28rpx 0 0;
+  /* + var(--tabbar-h, 0px)：贴底弹窗不许多出来的底部导航压住（V141 定的规矩） */
+  padding: 36rpx 32rpx calc(32rpx + env(safe-area-inset-bottom) + var(--tabbar-h, 0px));
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: dsSheetUp 0.26s ease;
+}
+@keyframes dsSheetUp {
+  from { transform: translateY(100%); opacity: 0.6; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.ds-title {
+  font-size: 32rpx; font-weight: 600; color: var(--color-text-1);
+  text-align: center; margin-bottom: 28rpx;
+}
+
+.ds-field { margin-bottom: 28rpx; }
+.ds-label { font-size: 26rpx; color: var(--color-text-2); margin-bottom: 12rpx; }
+.ds-sub { font-size: 24rpx; color: var(--color-text-3); }
+.ds-req { font-size: 24rpx; color: var(--color-primary-deep); }
+
+/* 数量输入：加高 + 大字号 + 居中（与「增加库存」那套口径一致） */
+.ds-input {
+  height: 96rpx; line-height: 96rpx; padding: 0 24rpx; box-sizing: border-box;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-inner); font-size: 36rpx; font-weight: 500;
+  text-align: center; color: var(--color-text-1);
+}
+
+/* ===== 二选一卡片：来源（用户自己选，不预选）===== */
+.ds-opts { display: flex; flex-direction: column; gap: 16rpx; }
+
+.ds-opt {
+  border: 2rpx solid var(--color-divider);
+  border-radius: var(--radius-card);
+  padding: 22rpx 24rpx;
+  background: var(--color-surface);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.ds-opt.on {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+.ds-opt.off { opacity: 0.5; }
+
+.ds-opt-top { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
+.ds-opt-name { font-size: 30rpx; font-weight: 600; color: var(--color-text-1); }
+
+.ds-badge {
+  flex: none;
+  height: 40rpx; line-height: 40rpx; padding: 0 16rpx;
+  border-radius: var(--radius-pill);
+  font-size: 22rpx; font-weight: 500;
+  background: var(--color-surface-2); color: var(--color-text-2);
+}
+.ds-badge.badge-off { background: rgba(217, 120, 106, 0.16); color: var(--color-danger); }
+
+.ds-opt-sub {
+  margin-top: 8rpx;
+  font-size: 24rpx; line-height: 1.5; color: var(--color-text-3);
+}
+.ds-em { color: var(--color-primary-deep); font-weight: 500; }
+
+/* V152：原 .ds-hint（底部三态长提示）已删 —— 卡片副标题已把话说清，不再重复。 */
+
+.ds-ops { display: flex; gap: 20rpx; margin-top: 32rpx; }
+.ds-btn {
+  flex: 1;
+  height: 88rpx; line-height: 88rpx; text-align: center;
+  border-radius: var(--radius-btn);
+  font-size: 30rpx; font-weight: 600;
+}
+.ds-btn-ghost { background: var(--color-surface-2); color: var(--color-text-2); }
+.ds-btn-primary { background: var(--color-primary); color: var(--color-primary-on); box-shadow: var(--shadow-btn); }

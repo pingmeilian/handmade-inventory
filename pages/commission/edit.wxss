@@ -1,0 +1,11 @@
+/* pages/commission/edit.wxss */
+.page-wrap { padding: 24rpx; box-sizing: border-box; }
+
+.picker { color: var(--color-text-1); }
+.picker.placeholder { color: var(--color-text-3); }
+
+.tip {
+  margin: 20rpx 8rpx; font-size: 24rpx; line-height: 1.6;
+  color: var(--color-text-3); background: var(--color-surface-2);
+  border-radius: var(--radius-inner); padding: 18rpx 22rpx;
+}

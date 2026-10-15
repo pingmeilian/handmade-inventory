@@ -1,0 +1,49 @@
+<!-- components/line-chart/line-chart.wxml —— 折线 / 柱状（纯 DOM，两条分支）
+     ⚠️ V142：改前这里只画了「最后一个值」—— 布局层算好的 yTicks / xTicks / showDot / tip
+        四样全没画，于是 30 天糊了 30 个圆点、只有一个刻度、横轴只有两个日期。
+        现在四样都画上，并加"按住吸附读数"。 -->
+<view class="bm-wrap" style="height:{{height}}px;--lc-color:{{color}};">
+  <view class="bm-read">
+    <text class="bm-read-text {{tip ? 'on' : ''}}">{{tip || hint}}</text>
+  </view>
+
+  <view class="bm-plot"
+        bindtouchstart="onTouch" bindtouchmove="onTouch"
+        bindtouchend="onTouchEnd" bindtouchcancel="onTouchEnd">
+
+    <!-- ========== 折线 ========== -->
+    <block wx:if="{{layout && type === 'line'}}">
+      <view class="lc-gridline" wx:for="{{layout.yTicks}}" wx:key="value" style="top:{{item.y}}px"></view>
+      <view class="lc-area" style="clip-path:{{layout.areaClip}}"></view>
+      <text class="lc-y" wx:for="{{layout.yTicks}}" wx:key="value" style="top:{{item.y}}px">{{item.text}}</text>
+      <view class="lc-seg" wx:for="{{layout.segs}}" wx:key="index"
+            style="left:{{item.x}}px;top:{{item.y}}px;width:{{item.len}}px;transform:rotate({{item.deg}}deg)"></view>
+      <view class="lc-dot" wx:for="{{layout.dots}}" wx:key="index" wx:if="{{item.showDot}}"
+            style="left:{{item.x}}px;top:{{item.y}}px"></view>
+      <text class="lc-x" wx:for="{{layout.xTicks}}" wx:key="x" style="{{item.style}}">{{item.text}}</text>
+    </block>
+
+    <!-- ========== 柱状（有量的那天才有柱，空档留白） ========== -->
+    <block wx:elif="{{layout && type === 'bar'}}">
+      <view class="lc-gridline" wx:for="{{layout.yTicks}}" wx:key="value" style="top:{{item.y}}px"></view>
+      <text class="lc-y" wx:for="{{layout.yTicks}}" wx:key="value" style="top:{{item.y}}px">{{item.text}}</text>
+      <view class="bar" wx:for="{{layout.bars}}" wx:key="index"
+            wx:if="{{!item.empty}}"
+            style="left:{{item.x}}px;top:{{item.y}}px;width:{{item.w}}px;height:{{item.h}}px;{{item.peak ? 'opacity:1;' : ''}}"></view>
+      <view class="bar-peak-line" wx:for="{{layout.bars}}" wx:key="index"
+            wx:if="{{item.peak}}" style="left:{{item.x}}px;width:{{item.w}}px;top:{{layout.baselineY + 3}}px"></view>
+      <text class="lc-x" wx:for="{{layout.xTicks}}" wx:key="x" style="{{item.style}}">{{item.text}}</text>
+    </block>
+
+    <!-- 指示线 + 高亮（按住时出现） -->
+    <block wx:if="{{layout && tipIndex >= 0}}">
+      <view class="lc-vline" style="left:{{mark.x}}px;top:{{layout.plot.top}}px;height:{{layout.plot.height}}px"></view>
+      <view class="lc-mark" style="left:{{mark.x}}px;top:{{mark.y}}px"></view>
+    </block>
+
+    <!-- ⚠️ 空态必须是**独立的 wx:if**，不许写成 wx:else ——
+         写成 wx:else 会跟上面那个"按住才出现"的 block 配对 ⇒ 平时（没按）反而显示"暂无数据"。
+         （V142 自查时抓到的一次真错。） -->
+    <view wx:if="{{!layout}}" class="bm-empty">{{emptyText}}</view>
+  </view>
+</view>

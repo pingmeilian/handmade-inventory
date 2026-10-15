@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "批量入库",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "ph-input": "/components/ph-input/ph-input"
+  }
+}

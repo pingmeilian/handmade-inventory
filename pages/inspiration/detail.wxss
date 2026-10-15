@@ -1,0 +1,22 @@
+/* pages/inspiration/detail.wxss */
+.head-name { font-size: 36rpx; font-weight: 600; color: var(--color-text-1); }
+.head-sub { font-size: 24rpx; color: var(--color-text-2); margin-top: 10rpx; }
+.desc { font-size: 28rpx; color: var(--color-text-1); line-height: 1.7; margin-top: 24rpx; white-space: pre-wrap; }
+.ops { display: flex; gap: 16rpx; margin-bottom: 16rpx; }
+
+.status-pill {
+  display: inline-block; margin-top: 16rpx; padding: 6rpx 20rpx;
+  font-size: 22rpx; color: var(--color-text-3); background: var(--color-surface-2);
+  border-radius: 999rpx;
+}
+.status-pill.on { color: var(--color-primary-deep); background: var(--color-primary-soft); }
+
+.desc-block { margin-top: 24rpx; }
+.blk-label { font-size: 24rpx; color: var(--color-text-3); margin-bottom: 8rpx; }
+.meta-line { font-size: 22rpx; color: var(--color-text-3); margin-top: 24rpx; }
+
+.photo-grid { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.photo { width: 160rpx; height: 160rpx; border-radius: 16rpx; overflow: hidden; background: var(--color-surface-2); }
+.photo-img { width: 100%; height: 100%; }
+
+.btn-disabled { background: var(--color-surface-2) !important; color: var(--color-text-3) !important; }

@@ -1,0 +1,97 @@
+<!-- pages/settings/sales.wxml —— 成品出入库（销售 / 生产，跨成品汇总）
+     2026-09-27（V73）由「销售记录」改名：本页含「出（销售）」与「进（生产）」两条，
+     叫"销售记录"名不副实，且与「物料出入库」不对称 ⇒ 统一为「成品出入库」
+     2026-09-27 D75/D76：用户要「我的」页能看销售记录，并问「流水里只有物料吗，有成品吗」。
+     核查结论：系统**只有物料流水**（FLOWS）；成品的「进 / 出」记在成品对象自己身上
+     （productions[] / sales[]），**没有统一时间轴**。
+     ⇒ 本页做**展示层聚合**，不动数据模型（改模型要迁移、风险大）。
+        聚合逻辑在 services/trace.js —— 纯函数，有单测（tests/trace.test.js）。
+
+     两个 tab 对应成品的「出」与「进」，与物料的「物料出入库」页形成对称结构。
+     2026-10-12（V144）：**补上趋势曲线** —— 用户「成品也加个趋势曲线」。
+     此前不对称的地方是：物料页有曲线、成品页只有汇总三格 + 明细列表。
+     曲线固定看近 30 天，图形/量纲/摘要写法都跟物料页对齐（见下面曲线卡的注释）。 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <view class="space-bar"><text class="space-name">{{curName}}</text></view>
+
+  <!-- 销售（出）/ 生产（进） -->
+  <view class="seg-wrap">
+    <view class="segment metric-seg">
+      <view class="segment-item {{tab==='sales'?'active':''}}" data-t="sales" bindtap="switchTab">销售</view>
+      <view class="segment-item {{tab==='production'?'active':''}}" data-t="production" bindtap="switchTab">生产</view>
+    </view>
+  </view>
+
+  <!-- 汇总 -->
+  <view class="card">
+    <view class="sum-row">
+      <view class="sum-cell">
+        <text class="sum-label">{{tab==='sales'?'销售笔数':'生产批次'}}</text>
+        <text class="sum-val">{{summary.count}}</text>
+      </view>
+      <view class="sum-cell">
+        <text class="sum-label">{{tab==='sales'?'售出件数':'生产件数'}}</text>
+        <text class="sum-val">{{summary.qty}}</text>
+      </view>
+      <view class="sum-cell">
+        <text class="sum-label">{{tab==='sales'?'销售金额':'扣料成本'}}</text>
+        <text class="sum-val">¥{{summary.amountText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 筛选：成品名 / 日期区间（与「物料出入库」页同一套交互与口径） -->
+  <view class="filter-card">
+    <view class="filter-row">
+      <text class="filter-label">成品</text>
+      <ph-input ph-class="filter-input" placeholder="按成品名称搜索" value="{{kw}}" bind:input="onKw" />
+    </view>
+    <view class="filter-row">
+      <text class="filter-label">区间</text>
+      <view class="range-picker picker-trigger" bindtap="openDateStart">{{dateStart || '起始'}}</view>
+      <text class="range-tilde">至</text>
+      <view class="range-picker picker-trigger" bindtap="openDateEnd">{{dateEnd || '结束'}}</view>
+      <view class="filter-reset" bindtap="resetFilters">重置</view>
+    </view>
+  </view>
+
+  <!-- 趋势曲线（V144 新增）—— 与「物料出入库」页**刻意对称**：
+       那页是物料的「进 / 出」，本页是成品的「出（销售）/ 进（生产）」。
+       ⚠️ 四条对称：① 图形=柱状（一天卖几笔 / 做几批，是**离散事件**，有动作才有柱）；
+       ② 量纲=**金额**（销售=销售额、生产=扣料成本），与 V143 统一后的物料页口径一致
+          （件数放摘要里，一张图只能有一个量纲）；
+       ③ 区间=固定**近 30 天**，**不跟随上面的日期筛选**（同一张卡里两个时间概念必然有人看错；
+          物料页也是这么定的）——但**跟随"成品名"筛选**（那是"看哪个成品"，不是时间）；
+       ④ 摘要写法=「N 天有销售　合计 ¥X　共 M 件　最多 MM-DD ¥Y」。
+       高度 380 = 图形 354 + 顶部那行"按住读数"的 26px（与物料页同款）。 -->
+  <view class="card">
+    <view class="section-title">趋势曲线<text class="sub">{{curveLabel}} · 近 30 天</text></view>
+    <line-chart points="{{curvePoints}}" type="bar" color="#C28E72"
+                unit="{{curveUnit}}" unitPos="{{curveUnitPos}}"
+                height="380" emptyText="{{curveEmptyText}}"></line-chart>
+    <view wx:if="{{curveSummary}}" class="curve-sum">{{curveSummary}}</view>
+  </view>
+
+  <!-- 明细 -->
+  <view class="card">
+    <view class="section-title">明细<text class="sub">{{rows.length}} 条</text></view>
+    <view wx:for="{{rows}}" wx:key="id" class="rec-row" data-pid="{{item.productId}}" bindtap="goProduct">
+      <view class="rec-left">
+        <text class="rec-name">{{item.productName}}</text>
+        <text wx:if="{{item.client}}" class="rec-client">卖给 {{item.client}}</text>
+        <text wx:else class="rec-client none">{{tab==='sales'?'未记录买家':'—'}}</text>
+      </view>
+      <view class="rec-right">
+        <text class="rec-amt">×{{item.qty}}　¥{{item.amountText}}</text>
+        <text class="rec-sub">{{item.subText}}</text>
+        <text class="rec-date">{{item.date}}</text>
+      </view>
+    </view>
+    <view wx:if="{{!rows.length}}" class="t-caption">{{tab==='sales'?'暂无销售记录':'暂无生产记录'}}</view>
+  </view>
+
+  <date-picker-sheet show="{{dpStart}}" title="选择起始日期" value="{{dateStart}}" bind:change="onDateStart" bind:confirm="closeDate" bind:cancel="closeDate" />
+  <date-picker-sheet show="{{dpEnd}}" title="选择结束日期" value="{{dateEnd}}" bind:change="onDateEnd" bind:confirm="closeDate" bind:cancel="closeDate" />
+</view>

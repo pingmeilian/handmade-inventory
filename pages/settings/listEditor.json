@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "预设配置",
+  "usingComponents": {
+    "ph-input": "/components/ph-input/ph-input"
+  }
+}

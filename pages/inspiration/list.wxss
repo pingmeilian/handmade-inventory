@@ -1,0 +1,101 @@
+/* pages/inspiration/list.wxss —— 柔和简约：背景跟主题（--color-bg） / 主题色 var(--color-primary) */
+.page-wrap {
+  padding: 24rpx 24rpx 200rpx;
+  box-sizing: border-box;
+  background: var(--color-bg);
+  min-height: 100vh;
+}
+
+.space-bar { padding: 4rpx 8rpx 16rpx; }
+.space-name { font-size: 30rpx; color: var(--color-text-1); font-weight: 600; }
+
+/* ===== 顶部 tab 切换 ===== */
+.seg-wrap { display: flex; justify-content: center; margin-bottom: 16rpx; }
+.seg {
+  display: inline-flex; background: var(--color-surface); border-radius: 999rpx;
+  padding: 6rpx; box-shadow: 0 2rpx 10rpx rgba(120, 90, 60, 0.04);
+}
+.seg-item {
+  padding: 12rpx 40rpx; font-size: 28rpx; color: var(--color-text-2);
+  border-radius: 999rpx; transition: all .2s;
+}
+.seg-item.active { background: var(--color-primary); color: var(--color-primary-on); font-weight: 600; }
+
+/* 统一列表卡片样式由 app.wxss 的 .std-card/.std-thumb/.std-body/.std-title/.std-sub 提供；
+   本页仅保留占位图标尺寸覆盖。 */
+.pic-ph { width: 56rpx; height: 56rpx; opacity: .55; }
+
+.fab {
+  position: fixed; right: 40rpx; bottom: 60rpx;
+  width: 96rpx; height: 96rpx; border-radius: 50%;
+  background: var(--color-primary); color: var(--color-primary-on); font-size: 56rpx;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(200, 168, 143, 0.35); z-index: 20;
+}
+
+/* ===== 快速新增弹窗 ===== */
+.add-mask {
+  position: fixed; left: 0; right: 0; top: 0; bottom: 0;
+  background: var(--color-mask);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 48rpx;
+}
+.add-dialog {
+  width: 100%;
+  background: var(--color-surface); border-radius: 24rpx;
+  padding: 32rpx 28rpx 24rpx;
+  box-shadow: 0 12rpx 40rpx rgba(120, 90, 60, 0.16);
+}
+.add-title {
+  font-size: 32rpx; font-weight: 600; color: var(--color-text-1);
+  text-align: center; margin-bottom: 24rpx;
+}
+.add-input {
+  width: 100%; box-sizing: border-box;
+  height: var(--input-md); line-height: var(--input-md);
+  padding: 0 20rpx;
+  background: var(--color-surface-2); border-radius: 12rpx;
+  font-size: 28rpx; color: var(--color-text-1);
+}
+/* margin 移到外层 wrap：ph-class 加在组件内部 input 上，margin 撑不开根节点 */
+.add-input-wrap { margin-bottom: 16rpx; }
+
+.add-photos {
+  display: flex; flex-wrap: wrap; gap: 14rpx;
+  margin-top: 20rpx;
+}
+.add-pic {
+  position: relative;
+  width: 140rpx; height: 140rpx;
+  border-radius: 8rpx; overflow: hidden;
+  background: var(--color-surface-2);
+}
+.add-pic-img { width: 140rpx; height: 140rpx; display: block; }
+.add-pic-del {
+  position: absolute; right: 0; top: 0;
+  width: 40rpx; height: 40rpx;
+  background: var(--color-mask); color: #fff;
+  font-size: 26rpx; line-height: 40rpx; text-align: center;
+  border-bottom-left-radius: 8rpx;
+}
+.add-pic-add {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  border: 2rpx dashed var(--color-primary); background: var(--color-surface);
+}
+.add-plus { font-size: 40rpx; color: var(--color-primary); line-height: 1; }
+.add-plus-tip { font-size: 20rpx; color: var(--color-text-2); margin-top: 6rpx; }
+
+.add-more {
+  margin-top: 20rpx; text-align: center;
+  font-size: 24rpx; color: var(--color-primary);
+}
+
+.add-actions { display: flex; gap: 20rpx; margin-top: 24rpx; }
+.add-btn {
+  flex: 1; height: var(--btn-h); line-height: var(--btn-h);
+  text-align: center; border-radius: 12rpx; font-size: 30rpx;
+}
+.add-btn.cancel { background: var(--color-surface-2); color: var(--color-text-1); }
+.add-btn.confirm { background: var(--color-primary); color: var(--color-primary-on); font-weight: 600; }

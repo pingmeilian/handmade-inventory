@@ -1,0 +1,125 @@
+<!-- pages/loss/edit.wxml —— 损耗录入/编辑 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+
+  <!-- 耗材 -->
+  <block wx:if="{{type==='consumable'}}">
+    <view class="card">
+      <view class="field">
+        <view class="field-label">名称<span class="req">*</span></view>
+        <ph-input ph-class="field-control input" placeholder="如 缝纫线 / 热熔胶棒" value="{{name}}" bind:input="onName" />
+      </view>
+      <view class="field">
+        <view class="field-label">规格</view>
+        <ph-input ph-class="field-control input" placeholder="如 40度 / 直径3mm" value="{{spec}}" bind:input="onSpec" />
+      </view>
+      <view class="field">
+        <view class="field-label">数量<span class="req">*</span></view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="如 5" value="{{quantity}}" bind:input="onQuantity" />
+      </view>
+      <view class="field">
+        <view class="field-label">总价（元）<span class="req">*</span><text class="t-min">　单价自动算，不用填</text></view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="如 30" value="{{totalPrice}}" bind:input="onTotalPrice" />
+        <view wx:if="{{unitPriceHint}}" class="t-min price-hint">≈ 单价 ¥{{unitPriceHint}}/件</view>
+      </view>
+      <view class="field">
+        <view class="field-label">入库日期<span class="req">*</span><text class="t-min">　开始使用后自动记录节点</text></view>
+        <view class="field-control picker-trigger" bindtap="openInDate">{{inDate}}</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 资产 -->
+  <block wx:if="{{type==='asset'}}">
+    <view class="card">
+      <view class="field">
+        <view class="field-label">名称<span class="req">*</span></view>
+        <ph-input ph-class="field-control input" placeholder="如 兄弟缝纫机" value="{{name}}" bind:input="onName" />
+      </view>
+      <view class="field">
+        <view class="field-label">原值（元）<span class="req">*</span></view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="如 1200" value="{{originalValue}}" bind:input="onOriginalValue" />
+      </view>
+      <view class="field">
+        <view class="field-label">预计寿命（月）<span class="req">*</span></view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="如 24" value="{{lifeMonths}}" bind:input="onLifeMonths" />
+        <view wx:if="{{depreHint}}" class="t-min price-hint">≈ 月折旧 ¥{{depreHint}}</view>
+      </view>
+      <view class="field">
+        <view class="field-label">入库日期<span class="req">*</span><text class="t-min">　维修费在列表中「维修」计入成本</text></view>
+        <view class="field-control picker-trigger" bindtap="openInDate">{{inDate}}</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 工具 -->
+  <block wx:if="{{type==='tool'}}">
+    <view class="card">
+      <view class="field">
+        <view class="field-label">名称<span class="req">*</span></view>
+        <ph-input ph-class="field-control input" placeholder="如 裁缝剪刀" value="{{name}}" bind:input="onName" />
+      </view>
+      <view class="field">
+        <view class="field-label">买价（元）<span class="req">*</span></view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="如 35" value="{{price}}" bind:input="onPrice" />
+      </view>
+      <view class="field">
+        <view class="field-label">入库日期<span class="req">*</span><text class="t-min">　只换不修，坏了在列表「换新」</text></view>
+        <view class="field-control picker-trigger" bindtap="openInDate">{{inDate}}</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 其它支出（V131）：快递费 / 摊位费 / 电费… 只有金额，不摊销、不分摊 -->
+  <block wx:if="{{type==='other'}}">
+    <view class="card">
+      <view class="field">
+        <view class="field-label">名称<span class="req">*</span></view>
+        <ph-input ph-class="field-control input" placeholder="如 快递费 / 摊位费 / 电费" value="{{name}}" bind:input="onName" />
+      </view>
+      <view class="field">
+        <view class="field-label">金额（元）<span class="req">*</span><text class="t-min">　按当期全额计入消费</text></view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="如 25" value="{{amount}}" bind:input="onAmount" />
+      </view>
+      <view class="field">
+        <view class="field-label">支出日期<span class="req">*</span></view>
+        <view class="field-control picker-trigger" bindtap="openInDate">{{inDate}}</view>
+      </view>
+      <view class="field">
+        <view class="field-label">备注</view>
+        <ph-input ph-class="field-control input" placeholder="选填" value="{{note}}" bind:input="onNote" />
+      </view>
+    </view>
+  </block>
+
+  <!-- 维修（资产） -->
+  <block wx:if="{{type==='assetRepair'}}">
+    <view class="card">
+      <view class="field">
+        <view class="field-label">资产</view>
+        <view class="field-control" style="color:var(--color-text-2);">{{assetName}}</view>
+      </view>
+      <view class="field">
+        <view class="field-label">维修日期<span class="req">*</span></view>
+        <view class="field-control picker-trigger" bindtap="openRepairDate">{{repairDate}}</view>
+      </view>
+      <view class="field">
+        <view class="field-label">维修费（元）<span class="req">*</span><text class="t-min">　计入资产成本，一起折旧</text></view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="如 换皮带 80" value="{{repairFee}}" bind:input="onRepairFee" />
+      </view>
+      <view class="field">
+        <view class="field-label">备注</view>
+        <ph-input ph-class="field-control input" placeholder="选填，如 更换皮带" value="{{repairNote}}" bind:input="onRepairNote" />
+      </view>
+    </view>
+  </block>
+
+  <view class="bottom-bar">
+    <view class="btn btn-primary btn-large btn-block" bindtap="save">保存</view>
+  </view>
+  <view class="safe-bottom"></view>
+
+  <date-picker-sheet show="{{dpIn}}" title="选择入库日期" value="{{inDate}}" bind:change="onInDate" bind:confirm="closeDate" bind:cancel="closeDate" />
+  <date-picker-sheet show="{{dpRepair}}" title="选择维修日期" value="{{repairDate}}" bind:change="onRepairDate" bind:confirm="closeDate" bind:cancel="closeDate" />
+</view>

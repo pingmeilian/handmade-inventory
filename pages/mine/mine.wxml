@@ -1,0 +1,118 @@
+<!-- pages/mine/mine.wxml —— 我的 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap pin-page">
+  <!-- V116：整块固定（灰框内）—— 资料卡 -->
+  <view class="pin-band" id="pinBand">
+  <view class="card profile">
+    <view class="avatar">手</view>
+    <view class="profile-main">
+      <view class="profile-name">手工物料库存</view>
+      <view class="profile-sub">当前空间：{{curSpace}}　·　ID {{openid}}</view>
+    </view>
+  </view>
+  </view>
+  <view class="pin-band-ph" style="height:{{bandH}}px;"></view>
+
+  <!-- V117：奶黄圆角面板 —— 包住分界线以下的全部内容（顶角 44rpx、左右贴边）；
+       min-height 用带高清出来：内容少时也铺到屏幕底，面板下面不露页面底色。 -->
+  <view class="content-panel" style="min-height:calc(100vh - {{bandH}}px);">
+
+  <!-- 累计总账（2026-10-10 V131）：自记账第一天至今。
+       主数字 = A 累计投入（"一共掏了多少钱"）；B 累计已耗 作副标；点整张卡进明细页。
+       ⚠️ V134：按用户真机截图，**卡上的小字说明全部删掉** ——
+          「自记账至今」「累计投入」「售出 + 已交付」「点这张卡看明细」。
+          进明细的提示改由右上角的 › 箭头承担（删了那行字，入口只剩 bindtap 本身，别再删箭头）。 -->
+  <view class="card loss-card loss-card-link ledger-card" wx:if="{{ledger}}" bindtap="goLedger">
+    <view class="loss-head">
+      <view class="loss-title">累计总账 <text class="loss-arrow">›</text></view>
+    </view>
+    <view class="ledger-row">
+      <view class="ledger-col">
+        <text class="ledger-k">总计消费</text>
+        <text class="ledger-v">{{ledger.spendAText}}</text>
+      </view>
+      <view class="ledger-col">
+        <text class="ledger-k">总计收入</text>
+        <text class="ledger-v ledger-v-in">{{ledger.incomeText}}</text>
+      </view>
+    </view>
+    <view class="ledger-foot">已耗成本 ≈ ¥{{ledger.spendBText}}　·　{{ledger.rangeText}}</view>
+  </view>
+
+  <view class="stat card">
+    <view class="stat-item"><text class="stat-v">{{stat.materials}}</text><text class="stat-k">物料</text></view>
+    <view class="stat-item"><text class="stat-v">{{stat.products}}</text><text class="stat-k">成品</text></view>
+    <view class="stat-item"><text class="stat-v">{{stat.commissions}}</text><text class="stat-k">排单</text></view>
+  </view>
+
+  <!-- 损耗成本（原底部 tab，现收进「我的」）：点击整张卡片进入明细 -->
+  <view class="card loss-card loss-card-link" wx:if="{{lossBreak}}" bindtap="goLossDetail">
+    <view class="loss-head">
+      <view class="loss-title">📉 损耗成本 <text class="sub">本月</text><text class="loss-arrow">›</text></view>
+    </view>
+    <view class="loss-bar" wx:if="{{lossBreak.total > 0}}">
+      <view class="loss-seg seg-amort" style="width:{{ lossBreak.consumableAmort / lossBreak.total * 100 }}%"></view>
+      <view class="loss-seg seg-depre" style="width:{{ lossBreak.depreciation / lossBreak.total * 100 }}%"></view>
+      <view class="loss-seg seg-tool" style="width:{{ lossBreak.toolExpense / lossBreak.total * 100 }}%"></view>
+    </view>
+    <view wx:else class="loss-empty">本月暂无损耗记录</view>
+    <view class="loss-legend">
+      <view class="lg"><view class="dot dot-amort"></view>耗材摊销 ¥{{lossBreak.consumableAmort}}</view>
+      <view class="lg"><view class="dot dot-depre"></view>折旧 ¥{{lossBreak.depreciation}}</view>
+      <view class="lg"><view class="dot dot-tool"></view>工具 ¥{{lossBreak.toolExpense}}</view>
+    </view>
+    <view class="loss-net">经营净收益 ≈ 总利润 − 损耗 = <text class="text-success">¥{{dispNet}}</text></view>
+  </view>
+
+  <view class="card menu">
+    <view class="menu-row" data-url="/pages/settings/categories" bindtap="go">
+      <text class="row-title">手作空间管理</text><text class="row-arrow">›</text>
+    </view>
+    <!-- 预设类入口已归并到「预设设置」（2026-09-27）：
+         原先物料分类/品类/单位/平台这 4 项散在这里。
+         守卫 tests/guard-preset-entries.test.js 防止再散落回来。
+         ⚠️ 同日 V67 起这一行**不带说明**（用户「把说明去掉」），保持与其它入口同款。 -->
+    <view class="menu-row" data-url="/pages/settings/presets" bindtap="go">
+      <text class="row-title">预设设置</text><text class="row-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="card menu">
+    <!-- 「基础设置」已移入「预设设置 → 默认值」并更名「默认值与预警」（2026-09-27）：
+         它里面只有"默认单位 + 低库存阈值"两项，叫"基础设置"名不副实。 -->
+    <view class="menu-row" data-url="/pages/settings/checkup" bindtap="go">
+      <text class="row-title">数据体检</text><text class="row-arrow">›</text>
+    </view>
+    <view class="menu-row" data-url="/pages/settings/backup" bindtap="go">
+      <text class="row-title">备份与恢复</text><text class="row-arrow">›</text>
+    </view>
+    <!-- 2026-09-27（V69）：原「出入库历史」改名「物料出入库」—— 该页**只含物料流水**
+         （系统没有成品流水表，成品的进出在「成品出入库」页），不改名会让人以为它包着成品。 -->
+    <view class="menu-row" data-url="/pages/settings/history" bindtap="go">
+      <text class="row-title">物料出入库</text><text class="row-arrow">›</text>
+    </view>
+    <!-- 2026-09-27（V73）：原「销售记录」改名「成品出入库」。
+         该页含「销售」与「生产」两条（成品出 + 成品进），叫"销售记录"名不副实；
+         改后与上一行「物料出入库」对称，也与数据导出里的表名一致。 -->
+    <view class="menu-row" data-url="/pages/settings/sales" bindtap="go">
+      <text class="row-title">成品出入库</text><text class="row-arrow">›</text>
+    </view>
+    <view class="menu-row" data-url="/pages/settings/export" bindtap="go">
+      <text class="row-title">数据导出</text><text class="row-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="card menu">
+    <!-- 二期功能（AI 辅助）入口已按需求隐藏：上架版不让用户看到规划页。
+         页面本身仍注册在 app.json（/pages/settings/valueadd），需要时可把下面这行放回来。
+    <view class="menu-row" data-url="/pages/settings/valueadd" bindtap="go">
+      <text class="row-title">二期功能（AI 辅助）</text><text class="row-arrow">›</text>
+    </view>
+    -->
+    <view class="menu-row" data-url="/pages/settings/about" bindtap="go">
+      <text class="row-title">关于</text><text class="row-arrow">›</text>
+    </view>
+  </view>
+  </view>
+</view>

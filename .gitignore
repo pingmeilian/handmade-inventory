@@ -1,0 +1,22 @@
+# 依赖与构建产物（按 package.json 重装，不入库）
+node_modules/
+miniprogram_npm/
+
+# 微信开发者工具本地产物（含每台机器的私有配置）
+.wxcloud/
+project.private.config.json
+CHANGELOG.md
+
+# 系统与编辑器杂项
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+*.swp
+.idea/
+.vscode/
+
+# 临时草稿
+.scratch/
+*.bak
+*.orig

@@ -1,0 +1,38 @@
+<!-- pages/inspiration/detail.wxml —— 灵感详情 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap" wx:if="{{it}}">
+  <view class="card">
+    <view class="head-name">{{it.title}}</view>
+    <view wx:if="{{it.source}}" class="head-sub">来源：{{it.source}}</view>
+    <view class="status-pill {{done?'on':''}}">{{done?'已完成':'待填坑'}}</view>
+
+    <view wx:if="{{it.desc}}" class="desc-block">
+      <view class="blk-label">构思备注</view>
+      <view class="desc">{{it.desc}}</view>
+    </view>
+
+    <view wx:if="{{it.fabricInfo}}" class="desc-block">
+      <view class="blk-label">面料辅料信息</view>
+      <view class="desc">{{it.fabricInfo}}</view>
+    </view>
+
+    <view wx:if="{{it.photos.length}}" class="desc-block">
+      <view class="blk-label">草图 / 面料实拍</view>
+      <view class="photo-grid">
+        <view class="photo" wx:for="{{it.photos}}" wx:key="*this" data-url="{{item}}" bindtap="previewPhoto">
+          <image class="photo-img" src="{{item}}" mode="aspectFill" />
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{it.createdAt}}" class="meta-line">创建于 {{it.createdAt}}</view>
+  </view>
+
+  <view class="ops">
+    <view class="btn btn-secondary btn-medium" bindtap="goEdit">编辑</view>
+    <view class="btn {{done?'btn-disabled':'btn-primary'}} btn-medium" bindtap="openConvert">{{done?'已填坑':'转为成品'}}</view>
+  </view>
+  <view class="btn btn-danger btn-medium btn-block" bindtap="del">删除灵感</view>
+  <view class="safe-bottom"></view>
+</view>

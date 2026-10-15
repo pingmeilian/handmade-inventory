@@ -1,0 +1,50 @@
+/* components/line-chart/line-chart.wxss */
+/* 纯 DOM / CSS 折线 + 柱状 —— 每段线用一条旋转的细条拼出来，坐标由 JS 算好（像素） */
+
+.bm-wrap { width: 100%; position: relative; display: flex; flex-direction: column; }
+/* 顶部读数行（V142）：默认给一句提示，按住时显示"日期 · 数值"。
+   为什么放图上方的固定一行、而不是跟着手指的气泡：手指会挡住气泡，而且气泡在窄图上容易出界。 */
+.bm-read { height: 26px; display: flex; align-items: center; }
+.bm-read-text { font-size: 22rpx; color: var(--color-text-3); }
+.bm-read-text.on { color: var(--color-text-1); font-weight: 600; }
+
+.bm-plot { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+
+/* 网格线：**位置由 yTicks 给**（内联 top），所以不再需要 CSS 去对齐 padT/padB */
+.lc-gridline { position: absolute; left: 0; right: 0; height: 1px; background: var(--color-divider); }
+
+/* 纵轴刻度文字：右对齐到绘区左边界（绘区 padL=44px，留 6px 间隙 ⇒ 38px 宽） */
+.lc-y {
+  position: absolute; left: 0; width: 38px; text-align: right;
+  transform: translateY(-50%);
+  font-size: 20rpx; color: var(--color-text-3);
+}
+/* 横轴日期：位置由 xTicks 的内联 style 给（left + translateX 锚点） */
+.lc-x { position: absolute; bottom: 0; font-size: 20rpx; color: var(--color-text-3); }
+
+.lc-area { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: var(--lc-color, var(--color-primary)); opacity: 0.10; }
+
+.lc-seg {
+  position: absolute; height: 2px; border-radius: 1px;
+  background: var(--lc-color, var(--color-primary)); transform-origin: 0 50%;
+}
+.lc-dot {
+  position: absolute; width: 7px; height: 7px; margin-left: -3.5px; margin-top: -3.5px;
+  border-radius: 50%; background: var(--color-surface); box-shadow: 0 0 0 2px var(--lc-color, var(--color-primary));
+}
+
+/* 柱：未到峰值的一律压一点透明度，峰值满色 ⇒ 不用第二个色值就能突出"那天最多" */
+.bar { position: absolute; border-radius: 1px 1px 0 0; background: var(--lc-color, var(--color-primary)); opacity: 0.78; }
+.bar-peak-line { position: absolute; height: 2px; background: var(--lc-color, var(--color-primary)); }
+
+/* 按住时的指示线与高亮点 */
+.lc-vline { position: absolute; width: 1px; background: var(--lc-color, var(--color-primary)); opacity: 0.55; }
+.lc-mark {
+  position: absolute; width: 9px; height: 9px; margin-left: -4.5px; margin-top: -4.5px;
+  border-radius: 50%; background: var(--color-surface); box-shadow: 0 0 0 2px var(--lc-color, var(--color-primary));
+}
+
+.bm-empty {
+  height: 100%; display: flex; align-items: center; justify-content: center;
+  font-size: 26rpx; color: var(--color-text-3);
+}

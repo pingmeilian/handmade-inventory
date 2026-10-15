@@ -1,0 +1,22 @@
+/* pages/settings/backup.wxss —— 备份与恢复 */
+.mode-row { display: flex; gap: 16rpx; margin: 20rpx 0; }
+.mode { flex: 1; border: 2rpx solid var(--color-divider); border-radius: 12rpx; padding: 20rpx; text-align: center; }
+.mode-on { border-color: var(--color-primary); background: var(--color-surface-2); }
+.mode-name { font-size: 28rpx; font-weight: 600; }
+.mode-desc { font-size: 22rpx; color: var(--color-text-3); margin-top: 6rpx; }
+.bp-export { margin-top: 16rpx; }
+.bp-import { margin-top: 20rpx; }
+.bp-last { margin-top: 16rpx; }
+.bp-snap { display: flex; align-items: center; padding: 16rpx 0; border-bottom: 1rpx solid var(--color-divider); }
+.bp-snap:last-of-type { border-bottom: none; }
+.bp-snap-info { flex: 1; }
+.bp-snap-reason { font-size: 26rpx; }
+.bp-snap-btn { font-size: 26rpx; color: var(--color-primary); padding: 8rpx 20rpx; }
+
+/* 云端还原点行：每行一份 + 一个「恢复这份」（想回到更早那份时用） */
+.bp-rp { display: flex; align-items: center; padding: 16rpx 0; border-bottom: 1rpx solid var(--color-divider); }
+.bp-rp:last-of-type { border-bottom: none; }
+.bp-rp-info { flex: 1; }
+.bp-rp-at { font-size: 26rpx; }
+.bp-rp-ago { font-size: 20rpx; color: var(--color-text-3); margin-top: 4rpx; }
+.bp-rp-btn { font-size: 26rpx; color: var(--color-primary); padding: 8rpx 20rpx; }

@@ -1,0 +1,39 @@
+/* pages/settings/sales.wxss —— 成品出入库（销售 / 生产）
+   筛选与区间选择器的样式与「物料出入库」页保持一致（各页自带一份，项目既有约定）。 */
+.space-bar { margin-bottom: 24rpx; }
+.space-name { font-size: 34rpx; font-weight: 600; color: var(--color-text-1); }
+
+/* 汇总三格 */
+.sum-row { display: flex; align-items: stretch; }
+.sum-cell { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.sum-label { font-size: 22rpx; color: var(--color-text-3); }
+.sum-val { font-size: 34rpx; font-weight: 600; color: var(--color-text-1); margin-top: 6rpx; font-variant-numeric: tabular-nums; }
+
+/* 明细行 */
+.rec-row { display: flex; align-items: center; justify-content: space-between; padding: 18rpx 0; border-bottom: 1rpx solid var(--color-divider); }
+.rec-row:last-child { border-bottom: none; }
+.rec-left { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rec-name { font-size: 28rpx; color: var(--color-text-1); }
+.rec-client { font-size: 22rpx; color: var(--color-text-2); margin-top: 6rpx; }
+.rec-client.none { color: var(--color-text-3); }
+.rec-right { text-align: right; flex: none; padding-left: 16rpx; }
+.rec-amt { font-size: 28rpx; font-weight: 600; color: var(--color-text-1); font-variant-numeric: tabular-nums; display: block; }
+.rec-sub { font-size: 20rpx; color: var(--color-text-3); display: block; margin-top: 4rpx; }
+.rec-date { font-size: 20rpx; color: var(--color-text-3); display: block; margin-top: 4rpx; }
+
+/* 筛选卡片（与 history 页同款） */
+.filter-card { background: var(--color-surface); border-radius: var(--radius-card); padding: 22rpx 24rpx; margin-bottom: 24rpx; box-shadow: var(--shadow-card); }
+.filter-row { display: flex; align-items: center; gap: 16rpx; flex-wrap: wrap; margin-bottom: 16rpx; }
+.filter-row:last-child { margin-bottom: 0; }
+.filter-label { font-size: 24rpx; color: var(--color-text-3); width: 72rpx; flex: none; }
+.filter-input { flex: 1; min-width: 200rpx; background: var(--color-surface-2); border-radius: var(--radius-pill); height: 60rpx; line-height: 60rpx; padding: 0 26rpx; font-size: 26rpx; color: var(--color-text-1); }
+.range-picker { background: var(--color-surface-2); border-radius: var(--radius-inner); padding: 12rpx 22rpx; font-size: 24rpx; color: var(--color-text-1); }
+.range-tilde { font-size: 24rpx; color: var(--color-text-3); }
+.filter-reset { font-size: 24rpx; color: var(--color-primary); padding: 8rpx 12rpx; margin-left: auto; }
+.seg-wrap { width: 100%; margin-bottom: 24rpx; }
+.metric-seg .segment-item { font-size: 24rpx; }
+
+/* 趋势曲线的区间摘要（V144）：
+   与「物料出入库」页同款同位置 —— 用户在那儿反馈过"看不到有用的信息"，
+   摘要行就是"有用信息"最直接的来源（N 天有动作 / 合计 / 共几件 / 峰值哪天）。 */
+.curve-sum { margin-top: 14rpx; font-size: 24rpx; color: var(--color-text-2); line-height: 1.5; }

@@ -1,0 +1,55 @@
+/* 全局占位输入组件：外观与页面 .field-control 一致 */
+.ph-input { width: 100%; position: relative; }
+.ph-control {
+  width: 100%;
+  min-height: 80rpx;
+  padding: 20rpx 24rpx;
+  line-height: 40rpx;
+  font-size: 28rpx;
+  border-radius: var(--radius-inner);
+  background: var(--color-surface-2);
+  color: var(--color-text-1);
+  box-sizing: border-box;
+}
+.ph-tall .ph-control { min-height: 96rpx; padding: 26rpx 24rpx; line-height: 42rpx; font-size: 30rpx; }
+.ph-ta { width: 100%; word-break: break-all; overflow-wrap: break-word; }
+/* 占位符：低调灰色，仅视觉 */
+.ph-ph { color: var(--color-text-3); font-size: 28rpx; }
+.ph-tall .ph-ph { font-size: 30rpx; }
+
+/* ===== 紧凑尺寸档（教程模块用）：比默认更小巧，内边距收紧 ===== */
+.ph-sz-compact {
+  min-height: 60rpx; padding: 12rpx 16rpx;
+  line-height: 30rpx; font-size: 24rpx; border-radius: 12rpx;
+}
+.ph-sz-mini {
+  min-height: 52rpx; padding: 8rpx 12rpx;
+  line-height: 26rpx; font-size: 22rpx; border-radius: 10rpx;
+}
+.ph-ph-compact { font-size: 24rpx; }
+.ph-ph-mini { font-size: 22rpx; }
+
+/* ===== 悬浮气泡标签 =====
+   静止（空值+未聚焦）：收回输入框内，居中显示，灰色
+   激活（聚焦 或 已有内容）：上浮到输入框上方固定，浅棕色
+   气泡字号 26rpx > 输入框内文字（compact 24rpx / mini 22rpx） */
+.ph-has-bubble { padding-top: 28rpx; }
+.ph-bubble {
+  position: absolute;
+  left: 18rpx; right: 12rpx;
+  top: 28rpx; bottom: 0;
+  display: flex; align-items: center;
+  font-size: 26rpx;
+  color: var(--color-text-3);
+  line-height: 1.2;
+  white-space: nowrap; overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+  transition: top .18s ease, color .18s ease, opacity .18s ease;
+}
+.ph-bubble.on {
+  top: 0; bottom: auto; height: 28rpx; opacity: 1;
+  color: var(--color-primary-deep);
+}
+/* 同时传了 placeholder（如教程标题默认带成品名）：静止态让位给 placeholder，仅上浮时出现 */
+.ph-bubble-ghost { opacity: 0; }

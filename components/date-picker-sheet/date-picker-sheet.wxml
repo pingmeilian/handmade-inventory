@@ -1,0 +1,33 @@
+<view wx:if="{{show}}" class="dps-mask" bindtap="onCancel">
+  <view class="dps-sheet" catchtap="noop">
+    <view class="dps-title">{{title}}</view>
+
+    <view class="dps-cols">
+      <scroll-view scroll-y class="dps-col" scroll-into-view="y{{years[yi]}}" scroll-with-animation>
+        <view wx:for="{{years}}" wx:key="*this" id="y{{item}}" class="dps-cell {{index===yi?'on':''}}" data-col="y" data-idx="{{index}}" bindtap="onPick">
+          <text class="dps-num">{{item}}</text><text class="dps-unit">年</text>
+        </view>
+        <view class="dps-pad"></view>
+      </scroll-view>
+
+      <scroll-view scroll-y class="dps-col" scroll-into-view="m{{months[mi]}}" scroll-with-animation>
+        <view wx:for="{{months}}" wx:key="*this" id="m{{item}}" class="dps-cell {{index===mi?'on':''}}" data-col="m" data-idx="{{index}}" bindtap="onPick">
+          <text class="dps-num">{{item}}</text><text class="dps-unit">月</text>
+        </view>
+        <view class="dps-pad"></view>
+      </scroll-view>
+
+      <scroll-view scroll-y class="dps-col" scroll-into-view="d{{days[di]}}" scroll-with-animation>
+        <view wx:for="{{days}}" wx:key="*this" id="d{{item}}" class="dps-cell {{index===di?'on':''}}" data-col="d" data-idx="{{index}}" bindtap="onPick">
+          <text class="dps-num">{{item}}</text><text class="dps-unit">日</text>
+        </view>
+        <view class="dps-pad"></view>
+      </scroll-view>
+    </view>
+
+    <view class="dps-actions">
+      <view class="dps-btn dps-btn-ghost" bindtap="onCancel">取消</view>
+      <view class="dps-btn dps-btn-primary" bindtap="onConfirm">确定</view>
+    </view>
+  </view>
+</view>

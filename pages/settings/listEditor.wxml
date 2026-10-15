@@ -1,0 +1,96 @@
+<!-- pages/settings/listEditor.wxml —— 通用配置编辑
+     ⚠️ 2026-09-27（V67）：删掉页面内的 <view class="section-title">{{label}}</view>。
+        它的文案就是 label，而 label 已经被用作**导航栏标题**
+        （listEditor.js 的 setNavigationBarTitle(cfg.label)）⇒ 同一句话同屏出现两次。
+        守卫 tests/guard-preset-entries.test.js ⑦ 盯着这条。 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+
+  <view class="cfg-card" wx:for="{{list}}" wx:key="id">
+    <view class="cfg-main" data-id="{{item.id}}" bindtap="openEdit">
+      <text class="cfg-name">{{item.name}}</text>
+      <text wx:if="{{item.sub}}" class="cfg-sub">{{item.sub}}</text>
+    </view>
+    <text class="cfg-del" data-id="{{item.id}}" bindtap="remove">删除</text>
+  </view>
+
+  <view class="btn btn-primary btn-large btn-block" bindtap="openAdd">+ 新建{{label}}</view>
+</view>
+
+<!-- 编辑面板 -->
+<view wx:if="{{showSheet}}" class="mask" bindtap="closeSheet">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet-title">{{editItem.id ? '编辑' : '新建'}}{{label}}</view>
+    <view class="field">
+      <view class="field-label">名称</view>
+      <ph-input ph-class="field-control input" placeholder="名称" value="{{editItem.name}}" bind:input="onName" />
+    </view>
+    <view wx:if="{{hasUnit}}" class="field">
+      <view class="field-label">默认单位</view>
+      <ph-input ph-class="field-control input" placeholder="个 / 米 / 克…" value="{{editItem.defaultUnit}}" bind:input="onUnit" />
+    </view>
+    <view wx:if="{{hasAttrs}}" class="field">
+      <view class="field-label">属性<text class="t-min">　点 ⋯ 管理，可设预设值</text></view>
+      <view class="attr-card" wx:for="{{editItem.attrDimensions}}" wx:key="index">
+        <view class="attr-card-head">
+          <text class="attr-card-name">{{item.name || '未命名'}}</text>
+          <text class="attr-card-menu" data-i="{{index}}" bindtap="openAttrMenu">⋯</text>
+        </view>
+        <scroll-view scroll-x class="attr-opts-scroll" wx:if="{{item.options.length}}">
+          <view class="attr-opts-inner">
+            <view class="opt-chip" wx:for="{{item.options}}" wx:for-item="opt" wx:for-index="j" wx:key="index" data-i="{{index}}" data-j="{{j}}" bindtap="openOptionMenu">{{opt}}</view>
+          </view>
+        </scroll-view>
+        <view class="opt-add" data-i="{{index}}" bindtap="addOption">+ 预设值</view>
+      </view>
+      <view class="btn btn-ghost btn-small btn-block" bindtap="addAttr">+ 添加属性</view>
+    </view>
+    <view wx:if="{{hasFabricWidth}}" class="field field-switch">
+      <view class="field-label">面料类</view>
+      <view class="switch {{editItem.isFabric?'on':''}}" bindtap="onFabricSwitch">
+        <view class="switch-knob"></view>
+      </view>
+    </view>
+    <view wx:if="{{hasFabricWidth && editItem.isFabric}}" class="field">
+      <view class="field-label">默认幅宽（m）</view>
+      <ph-input ph-class="field-control input" type="digit" placeholder="如 1.5" value="{{editItem.defaultFabricWidth}}" bind:input="onFabricWidth" />
+    </view>
+    <view wx:if="{{hasHourly}}" class="field">
+      <view class="field-label">时薪（元/小时）</view>
+      <ph-input ph-class="field-control input" type="digit" placeholder="如 30" value="{{editItem.hourlyWage}}" bind:input="onHourlyWage" />
+    </view>
+    <block wx:if="{{hasPack}}">
+      <view class="field">
+        <view class="field-label">包装成本（元）</view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="0.00" value="{{editItem.packaging}}" bind:input="onPack" />
+      </view>
+      <view class="field">
+        <view class="field-label">运费（元）</view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="0.00" value="{{editItem.shipping}}" bind:input="onShip" />
+      </view>
+      <view class="field">
+        <view class="field-label">目标利润率（%）</view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="如 60" value="{{editItem.targetProfit}}" bind:input="onTarget" />
+      </view>
+    </block>
+    <view class="sheet-ops">
+      <view class="btn btn-secondary btn-medium" bindtap="closeSheet">取消</view>
+      <view class="btn btn-primary btn-medium" bindtap="saveSheet">保存</view>
+    </view>
+  </view>
+</view>
+
+<!-- 通用 prompt 弹窗：替代原生 wx.showModal(editable:true) -->
+<view wx:if="{{showPrompt}}" class="mask mask-center" bindtap="closePrompt">
+  <view class="sheet sheet-center prompt-sheet" catchtap="noop">
+    <view class="sheet-title">{{promptTitle}}</view>
+    <view class="field">
+      <ph-input ph-class="field-control input" placeholder="{{promptPlaceholder}}" value="{{promptValue}}" bind:input="onPromptInput" />
+    </view>
+    <view class="sheet-ops">
+      <view class="btn btn-secondary btn-medium" bindtap="closePrompt">取消</view>
+      <view class="btn btn-primary btn-medium" bindtap="confirmPrompt">确定</view>
+    </view>
+  </view>
+</view>

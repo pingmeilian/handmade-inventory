@@ -1,0 +1,39 @@
+<!-- pages/materials/bulkin.wxml —— 批量入库 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <view class="space-bar"><text class="space-name">{{curName}}</text></view>
+
+  <view class="card tip-card">
+    <view class="t-min">批量录入多个物料的入库数量和本次总价，一次提交统一生成入库流水并更新加权平均单价。面料需填写长×宽，请到物料详情单独入库。</view>
+  </view>
+
+  <view class="search-bar">
+    <ph-input ph-class="search-input" placeholder="搜索物料名称" value="{{keyword}}" confirmType="search" bind:input="onSearch" />
+  </view>
+
+  <view wx:if="{{list.length}}">
+    <view class="bulk-row" wx:for="{{list}}" wx:key="id">
+      <view class="bulk-main">
+        <view class="bulk-name">{{item.name}}</view>
+        <view class="bulk-sub">当前 {{item.stock}}{{item.unit}}</view>
+      </view>
+      <view class="bulk-inputs">
+        <view class="bulk-field">
+          <ph-input ph-class="bulk-input" type="digit" placeholder="数量" value="{{item.qty}}" ds="{{ {id: item.id} }}" bind:input="onQty" />
+          <text class="bulk-unit">{{item.unit}}</text>
+        </view>
+        <view class="bulk-field">
+          <ph-input ph-class="bulk-input bulk-input-total" type="digit" placeholder="本次总价" value="{{item.total}}" ds="{{ {id: item.id} }}" bind:input="onTotal" />
+          <text class="bulk-unit">元</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  <view wx:else class="t-caption">当前空间无非面料物料</view>
+
+  <view class="bottom-bar">
+    <view class="btn btn-primary btn-large btn-block" bindtap="submit">统一入库</view>
+  </view>
+  <view class="safe-bottom"></view>
+</view>

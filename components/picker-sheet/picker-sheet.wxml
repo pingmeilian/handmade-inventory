@@ -1,0 +1,15 @@
+<view wx:if="{{show}}" class="ps-mask" bindtap="onCancel">
+  <view class="ps-sheet" catchtap="noop">
+    <view class="ps-title">{{title}}</view>
+    <scroll-view scroll-y class="ps-list">
+      <view wx:for="{{options}}" wx:key="index" class="ps-option {{index===selected?'on':''}}" data-idx="{{index}}" bindtap="onSelect">
+        <text class="ps-option-text">{{rangeKey ? item[rangeKey] : item}}</text>
+        <text wx:if="{{index===selected}}" class="ps-option-check">✓</text>
+      </view>
+    </scroll-view>
+    <view class="ps-actions">
+      <view class="ps-btn ps-btn-ghost" bindtap="onCancel">取消</view>
+      <view class="ps-btn ps-btn-primary" bindtap="onConfirm">确定</view>
+    </view>
+  </view>
+</view>

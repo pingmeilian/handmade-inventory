@@ -1,0 +1,547 @@
+/* pages/dashboard/dashboard.wxss —— 轻盈柔和奶咖手作风（仅看板页视觉，逻辑不动）
+   配色一律走主题 token（页面底色 = --color-bg 等），不在这里写死 */
+
+/* 页面底色覆盖 */
+page { background: var(--color-bg); }
+
+/* 通用卡片：轻量化统一（覆盖全局，仅作用于看板页） */
+.card {
+  background: var(--color-surface);
+  border-radius: 20rpx;                 /* 统一圆角 20rpx */
+  padding: 20rpx;                        /* 内边距收紧 */
+  box-shadow: 0 4rpx 14rpx rgba(120, 90, 60, 0.03); /* 极淡暖灰浅阴影 */
+  margin-bottom: 16rpx;
+}
+
+/* 区块标题
+   V102：间距统一 —— 原先这里 12rpx、板块标题 18rpx、区块之间 20rpx，三个数并存；
+   现在一律 18rpx（用户：「这个ui全局改一下」）。
+   字号不动：板块标题是 22rpx 的辅助小标题，`.section-title` 是 26rpx 的区块标题，层级不同。 */
+.section-title { color: var(--color-text-1); font-weight: 600; margin-bottom: 18rpx; }
+.section { margin-bottom: 18rpx; }
+
+/* ===== 顶部单行标题栏（样式由 app.wxss 的 .topbar 统一提供，本页不再单独定义） ===== */
+
+/* ===== 资产三大板块 =====
+   V102 两处调整（用户：「看板不同板块中间不要那条线 不好看」
+   「排单那两个字的位置不对呀，怎么有点靠上」）：
+
+   ① **删掉两处"收尾收紧"**：原来的 `.board{margin-bottom:4rpx}` 与
+      `.board-sec:last-child{margin-bottom:4rpx}` 让「营收与盈利」到「排单」之间只剩 4rpx，
+      而普通板块之间是 18rpx ⇒「排单」比别的板块憋一截、看着就是"靠上"。
+      现在所有板块一律 18rpx，标题位置就齐了。
+
+   ② **去掉板块标题下的那条横线**（原料资产 / 成品资产 / 营收与盈利 三条）。
+      原来靠 `padding-bottom: 8rpx` 把线托起来；撤线后把这 8rpx 并进 margin-bottom
+      （10 + 8 = 18）⇒**标题到卡片的距离一点没变**，只是少了一条线。 */
+.board-sec { margin-bottom: 18rpx; }
+.board-sec-title {
+  font-size: 22rpx; font-weight: 500; color: var(--color-text-2);
+  margin-bottom: 18rpx;
+}
+.board-row { display: flex; }
+.board-row.row2 { gap: 16rpx; }
+.board-row.row3 { gap: 12rpx; }
+
+.bcard {
+  flex: 1; position: relative; overflow: visible;
+  background: var(--color-surface); border-radius: 20rpx; padding: 14rpx 20rpx;  /* 上下内边距缩小约一半 */
+  box-shadow: 0 4rpx 14rpx rgba(120, 90, 60, 0.03);   /* 极淡暖灰浅阴影 */
+  display: flex; flex-direction: column;
+}
+.bcard-title { font-size: 22rpx; color: var(--color-text-2); }     /* 辅助浅文字保持不变 */
+.bcard-val { font-size: 38rpx; font-weight: 500; color: var(--color-text-1); line-height: 1.2; margin-top: 8rpx; } /* 中等字重，大号数字 */
+.bcard.warn .bcard-val { color: #D9A06B; }            /* 本月损耗成本 暖橙弱化 */
+.bcard.on { box-shadow: 0 6rpx 18rpx rgba(120, 90, 60, 0.08); }
+
+/* 局部轻提示气泡（点击卡片就近弹出，非全屏弹窗） */
+.bubble {
+  position: absolute; left: 16rpx; right: 16rpx; top: calc(100% + 14rpx);
+  background: var(--color-surface); border: 1rpx solid var(--color-divider); border-radius: 14rpx;
+  padding: 16rpx 20rpx; font-size: 22rpx; color: var(--color-text-1); line-height: 1.5;
+  box-shadow: 0 10rpx 26rpx rgba(120, 90, 60, 0.12); z-index: 30;
+}
+.bubble::before {
+  content: ''; position: absolute; top: -9rpx; left: 36rpx;
+  width: 16rpx; height: 16rpx; background: var(--color-surface);
+  border-left: 1rpx solid var(--color-divider); border-top: 1rpx solid var(--color-divider);
+  transform: rotate(45deg);
+}
+
+/* ===== 灵感 / 想做 / 排单 三张卡：统一固定高度 =====
+   ⚠️ 188rpx 这个值三处必须一致（灵感记录 / 想做清单 / 排单堆叠容器），否则视觉上错位。
+   用 min-height 而不是 height：既保证三张卡对齐，又不会在将来内容变高时把文字裁掉。
+
+   188rpx 是**算出来的**，不是拍的（第一次我拍了 172，被评审打回——漏算了继承的 line-height）：
+     继承自 app.wxss `page { line-height: 1.6 }`
+     上下 padding 14×2 = 28
+     图标 32 + margin 8 = 40
+     数字 30×1.2（自带 line-height）= 36
+     标签 22×1.6 + margin 4 = 39.2
+     空态提示 20×1.6 + margin 4 = 36     ← 最高的一种情况：数量为 0 时才有这行
+     合计 179.2 → 取 188 留 8.8 余量
+   ⚠️ 改这几个字号/行高/内边距时，务必回来重算，否则三张卡会重新错位。 */
+.quick-links { display: flex; gap: 16rpx; }
+.link-card {
+  flex: 1; min-height: 188rpx; box-sizing: border-box;
+  background: var(--color-surface); border-radius: 20rpx; padding: 14rpx 18rpx;
+  box-shadow: 0 4rpx 14rpx rgba(120, 90, 60, 0.03);
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  transition: transform 0.12s ease;
+}
+.link-card:active { transform: scale(0.98); }
+.link-ico { width: 32rpx; height: 32rpx; margin-bottom: 8rpx; }
+.link-num { font-size: 30rpx; font-weight: 500; color: var(--color-text-1); line-height: 1.2; }
+.link-label { font-size: 22rpx; color: var(--color-text-2); margin-top: 4rpx; }
+.link-zero { font-size: 20rpx; color: var(--color-text-3); margin-top: 4rpx; }
+
+/* ===== 排单：堆叠卡片 =====
+   结构：容器（188rpx，与上面两张卡同高）+ 2 个装饰层（绝对定位、更窄、往下错开）
+        + 顶卡（完整可见，承载信息）。
+   顶卡 172rpx，向下错开 8 / 16rpx（172+16=188 正好落回容器底）→ 装饰层各露一条 8rpx 的边，
+   且越靠后越窄（内缩 12 / 24rpx），一眼看出"后面还有"。 */
+.cm-head { display: flex; align-items: baseline; justify-content: space-between; }
+.cm-head-more { font-size: 20rpx; font-weight: 400; color: var(--color-text-2); }
+
+.cm-stack-wrap {
+  position: relative; min-height: 188rpx;
+  transition: transform 0.12s ease;
+}
+.cm-stack-wrap:active { transform: scale(0.98); }
+
+.cm-layer {
+  position: absolute; height: 172rpx; box-sizing: border-box;
+  /* V118：叠层与顶卡同一支色（用户：排单卡片要粉的）—— 层与层靠描边 + 阴影分开。
+     角色默认 = surface ⇒ 其它三套主题外观零变化。 */
+  background: var(--color-highlight); border-radius: 20rpx; border: 1rpx solid var(--color-divider);
+}
+.cm-layer-1 { left: 12rpx; right: 12rpx; top: 8rpx; z-index: 1; }
+.cm-layer-2 { left: 24rpx; right: 24rpx; top: 16rpx; z-index: 0; }
+
+.cm-top {
+  position: relative; z-index: 2; height: 172rpx; box-sizing: border-box;
+  /* V118：排单卡片走点睛卡角色 —— 粉帽=樱花粉；其它主题默认 surface（零变化）。 */
+  background: var(--color-highlight); border-radius: 20rpx;
+  box-shadow: 0 4rpx 14rpx rgba(120, 90, 60, 0.03);
+  padding: 18rpx 20rpx;
+  display: flex; align-items: center; gap: 16rpx;
+}
+.cm-top-main { flex: 1; min-width: 0; }
+.cm-top-name {
+  font-size: 28rpx; font-weight: 600; color: var(--color-text-1); line-height: 1.3;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* V118：副信息走 highlightSub —— 粉底上用 text-2 对比只有 1.67（看不清）；
+   角色默认 = text-2 ⇒ 其它主题与现在一模一样。 */
+.cm-top-sub { font-size: 22rpx; color: var(--color-highlight-sub); margin-top: 8rpx; line-height: 1.3; }
+.cm-top-tag { flex: none; }
+
+/* 空状态：与卡片同高、同圆角，内容居中；无堆叠 */
+.cm-empty {
+  min-height: 188rpx; box-sizing: border-box;
+  /* V115：空态卡走**高亮角色** —— 设计稿里它是樱花粉实底+摩卡棕字（点睛卡）；
+     其它主题默认仍是 surface，外观不变。 */
+  background: var(--color-highlight); border-radius: 20rpx;
+  box-shadow: 0 4rpx 14rpx rgba(120, 90, 60, 0.03);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.cm-empty-t { font-size: 26rpx; color: var(--color-highlight-on); line-height: 1.3; font-weight: 600; }
+.cm-empty-s { font-size: 20rpx; color: var(--color-highlight-on); opacity: 0.75; margin-top: 8rpx; line-height: 1.3; }
+
+/* 区域隔离细分割线：资产数据区 与 快捷入口区之间 */
+.soft-sep {
+  height: 1rpx; background: var(--color-divider);       /* 极细浅灰横线 */
+  margin: 20rpx 0;                          /* 上下适度留白，明确分隔两块区域 */
+}
+
+/* ===== 趋势曲线 ===== */
+.trend-title { display: flex; align-items: center; }
+.title-ico { width: 28rpx; height: 28rpx; margin-right: 10rpx; }
+
+/* 胶囊 Tab：去掉连续轨道，各自独立轻巧胶囊，文字严格上下居中 */
+.metric-seg, .range-seg { background: transparent; border-radius: 16rpx; padding: 0; }
+.seg-wrap { width: 100%; }
+.metric-seg { display: flex; flex-wrap: nowrap; gap: 10rpx; }
+.metric-seg .segment-item,
+.range-seg .segment-item {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; justify-content: center;  /* 严格上下居中 */
+  height: 56rpx; line-height: 1; padding: 0 12rpx;
+  background: var(--color-surface-2); color: var(--color-text-2);
+  border-radius: 16rpx; white-space: nowrap;
+  font-size: 22rpx; font-weight: 400;
+}
+.metric-seg .segment-item.active,
+.range-seg .segment-item.active { background: var(--color-primary); color: var(--color-primary-on); font-weight: 500; }
+.range-seg .segment-item { font-size: 24rpx; }
+
+.custom-range { display: flex; align-items: center; justify-content: center; margin-top: 10rpx; gap: 14rpx; }
+.range-picker {
+  background: var(--color-surface-2); border-radius: 16rpx; padding: 12rpx 22rpx;
+  font-size: 24rpx; color: var(--color-text-1);
+}
+.range-tilde { font-size: 24rpx; color: var(--color-text-2); }
+.curve-tip {
+  text-align: center; font-size: 24rpx; color: var(--color-text-2);
+  padding: 28rpx 24rpx; line-height: 1.6;
+}
+
+/* 弹层打开时锁住底层页面：把内容高度锁成视口高度并裁掉溢出，
+   这样即使弹层内 scroll-view 内容不足、触摸冒泡上来，页面也没得滚（不穿透）。 */
+.page-locked { height: 100vh; overflow: hidden; }
+
+/* ===== 统计弹窗（奶咖暖棕低饱和） ===== */
+.stat-popup {
+  position: fixed; left: 0; right: 0; top: 0; bottom: 0;
+  z-index: 1000;
+}
+.stat-mask {
+  position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+  background: var(--color-mask);
+}
+/* 面板用绝对定位「四边确定」高度，不再用 flex 分配 ——
+   scroll-view 需要一个真正确定的高度才能可靠滚动；靠 flex 算出来的高度在部分基础库上不被认，
+   表现就是「有的视图能滑、有的滑不动」。 */
+.stat-panel {
+  position: absolute; left: 0; right: 0; top: 60rpx; bottom: 0;
+  background: var(--color-bg);
+  border-radius: 32rpx 32rpx 0 0;
+  box-shadow: 0 -8rpx 30rpx rgba(120, 90, 60, 0.08);
+  overflow: hidden;
+}
+/* 标题栏 / 图表 / 列表全都在滚动区内部，所以它直接占满面板高度即可。
+   V141：底部留白改成 `50rpx + var(--tabbar-h, 0px)`（原来写死 160rpx）——
+   两种写法在**看板**上数值完全一样（50 + 110 = 160），改的目的是把"避开 tabBar"这件事
+   收口到一处变量：以后 tabBar 高度若调，只改 utils/theme-page.js。 */
+.stat-scroll {
+  height: 100%; box-sizing: border-box;
+  padding: 0 28rpx calc(50rpx + env(safe-area-inset-bottom) + var(--tabbar-h, 0px));
+}
+
+/* 顶部导航 */
+.stat-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 28rpx 0 18rpx;
+}
+.stat-back, .stat-ico-ph {
+  width: 64rpx; height: 64rpx;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 16rpx;
+  background: var(--color-surface);
+  box-shadow: 0 2rpx 10rpx rgba(120, 90, 60, 0.04);
+}
+/* 右侧占位：不显示任何东西，只为把标题挤到视觉正中（原来这里是个无功能的筛选按钮） */
+.stat-ico-ph { background: transparent; box-shadow: none; }
+.stat-ico { width: 32rpx; height: 32rpx; }
+.stat-title {
+  flex: 1; text-align: center;
+  font-size: 34rpx; font-weight: 600; color: var(--color-text-1);
+  padding: 0 20rpx;
+}
+
+/* 胶囊切换 */
+.stat-capsule {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--color-surface); border: 1rpx solid var(--color-divider); border-radius: 32rpx;
+  padding: 4rpx; margin: 0 auto 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(120, 90, 60, 0.03);
+}
+.stat-capsule.secondary { margin-top: 8rpx; margin-bottom: 8rpx; }
+.cap-item {
+  min-width: 96rpx; padding: 0 28rpx; height: 52rpx; line-height: 52rpx;
+  text-align: center; font-size: 24rpx; color: var(--color-text-1); border-radius: 26rpx;
+  transition: all 0.15s ease;
+}
+.cap-item.active {
+  background: var(--color-text-1); color: var(--color-surface); font-weight: 500;
+  box-shadow: 0 2rpx 8rpx rgba(90, 70, 50, 0.12);
+}
+
+/* 时间选择行 */
+.stat-timebar {
+  display: flex; align-items: center; justify-content: center; gap: 28rpx;
+  margin-bottom: 20rpx;
+}
+.time-arrow {
+  width: 56rpx; height: 56rpx; border-radius: 50%;
+  background: var(--color-surface);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2rpx 10rpx rgba(120, 90, 60, 0.04);
+}
+.time-arrow .stat-ico { width: 28rpx; height: 28rpx; }
+.time-current {
+  display: flex; align-items: center; gap: 10rpx;
+  background: var(--color-surface); border-radius: 16rpx; padding: 14rpx 32rpx;
+  font-size: 28rpx; font-weight: 500; color: var(--color-text-1);
+  box-shadow: 0 2rpx 10rpx rgba(120, 90, 60, 0.04);
+}
+.time-ico { width: 28rpx; height: 28rpx; }
+
+/* 图表容器：高度定在这里，内部 .stat-chart-box 是折线图的测量基准 */
+.stat-chart-wrap {
+  background: var(--color-surface); border-radius: 24rpx;
+  padding: 20rpx; margin-bottom: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(120, 90, 60, 0.04);
+  height: 420rpx; box-sizing: border-box;
+}
+.stat-chart-box { width: 100%; height: 100%; position: relative; }
+.chart-empty {
+  height: 100%; display: flex; align-items: center; justify-content: center;
+  font-size: 26rpx; color: var(--color-text-3);
+}
+
+/* ===== 环形图（conic-gradient 画浅色细环；环几何/引线/标签坐标全部由 JS 算好） ===== */
+.ring-wrap { position: relative; width: 100%; height: 100%; }
+.ring-arc { position: absolute; border-radius: 50%; }
+.ring-hole {
+  position: absolute; border-radius: 50%; background: var(--color-surface);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.ring-cap { font-size: 20rpx; color: var(--color-text-2); line-height: 1.1; }
+.ring-total { font-size: 32rpx; font-weight: 600; color: var(--color-text-1); margin-top: 2rpx; line-height: 1.15; }
+
+/* 隐藏滚动条：右侧那条竖线很碍眼。
+   enhanced + show-scrollbar={{false}} 是主手段，这里再兜一层（部分环境仍会画出滚动条） */
+.stat-scroll::-webkit-scrollbar, .stat-scroll ::-webkit-scrollbar,
+.dt-scroll::-webkit-scrollbar, .dt-scroll ::-webkit-scrollbar,
+.month-scroll::-webkit-scrollbar, .month-scroll ::-webkit-scrollbar {
+  width: 0 !important; height: 0 !important; display: none !important;
+}
+
+/* 折线引线：斜线段（旋转细条）+ 水平段（细横条）。
+   环是浅底色，引线要是也用浅色就彻底看不见了，所以走中性灰棕 */
+.rv-lead { position: absolute; height: 1px; background: var(--color-text-3); transform-origin: 0 50%; }
+.rv-lead-h { position: absolute; height: 1px; background: var(--color-text-3); }
+
+/* 环外标签：两行（分类名 / 百分比），垂直居中在算法给定的 y 上 */
+.rv-label { position: absolute; transform: translateY(-50%); display: flex; flex-direction: column; }
+.rv-label.rv-right { align-items: flex-start; }
+.rv-label.rv-left { align-items: flex-end; }
+.rv-name { font-size: 22rpx; color: var(--color-text-1); line-height: 1.25; white-space: nowrap; }
+.rv-pct { font-size: 20rpx; color: var(--color-text-2); line-height: 1.25; white-space: nowrap; }
+
+/* ===== 折线图（每段一个旋转细条，坐标由 JS 按容器尺寸算好） ===== */
+.lc { position: relative; width: 100%; height: 100%; overflow: hidden; }
+.lc-grid {
+  position: absolute; left: 44px; right: 8px; top: 18px; bottom: 26px;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.lc-grid-line { height: 1px; background: var(--color-divider); }
+.lc-area { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: var(--color-primary); opacity: 0.10; }
+.lc-seg {
+  position: absolute; height: 2px; border-radius: 1px;
+  background: var(--color-primary); transform-origin: 0 50%;
+}
+.lc-dot {
+  position: absolute; width: 8px; height: 8px; margin-left: -4px; margin-top: -4px;
+  border-radius: 50%; background: var(--color-surface); box-shadow: 0 0 0 2px var(--color-primary);
+}
+/* y 轴刻度：左侧，单位元 */
+.lc-y {
+  position: absolute; left: 0; transform: translateY(-50%);
+  font-size: 18rpx; color: var(--color-text-3);
+}
+/* x 轴刻度：首 / 中 / 尾 */
+/* V142：位置改由 lineLayout 的 xTicks[].style 给（4 档，见 lineLayout 的 xTicksOf）——
+   原来的 lc-x0/lc-xm/lc-x1 三个定位类已删（4 档时中间两个会重叠） */
+.lc-x { position: absolute; bottom: 0; font-size: 20rpx; color: var(--color-text-3); }
+/* 点折点浮现的数据气泡 */
+.lc-tip {
+  position: absolute; transform: translate(-50%, -150%);
+  background: var(--color-text-1); color: var(--color-surface); font-size: 20rpx;
+  padding: 6rpx 14rpx; border-radius: 8rpx; white-space: nowrap; z-index: 5;
+}
+
+/* ===== 柱状图（纯 CSS 高度百分比） ===== */
+.bc {
+  height: 100%; display: flex; align-items: flex-end; gap: 6rpx;
+  padding-bottom: 26rpx; box-sizing: border-box;
+}
+.bc-col {
+  flex: 1; min-width: 0; height: 100%; position: relative;
+  display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+}
+.bc-bar { width: 100%; max-width: 24rpx; background: var(--color-primary); border-radius: 6rpx 6rpx 0 0; }
+.bc-lb { position: absolute; bottom: -24rpx; font-size: 18rpx; color: var(--color-text-3); white-space: nowrap; }
+
+/* ===== 数字三色（V115）=====
+   设计稿里数字是**分组换色**（逐组取样）：原料组=陶土橘、成品组=姜黄、
+   营收组三卡=橘/黄/摩卡棕。角色默认值都是 primary ⇒ 其它主题数字仍是单色主色。 */
+.board-sec.sec-0 .bcard-val { color: var(--color-num-1); }
+.board-sec.sec-1 .bcard-val { color: var(--color-num-2); }
+.board-sec.sec-2 .bcard-val { color: var(--color-num-3); }
+.board-sec.sec-2 .board-row .bcard:nth-child(1) .bcard-val { color: var(--color-num-1); }
+.board-sec.sec-2 .board-row .bcard:nth-child(2) .bcard-val { color: var(--color-num-2); }
+.board-sec.sec-2 .board-row .bcard:nth-child(3) .bcard-val { color: var(--color-num-3); }
+
+/* 分类明细列表 */
+.stat-list-title {
+  font-size: 26rpx; font-weight: 600; color: var(--color-text-1);
+  margin: 8rpx 0 14rpx;
+}
+.stat-list {
+  background: var(--color-surface); border-radius: 24rpx; padding: 20rpx 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(120, 90, 60, 0.04);
+}
+.stat-list-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18rpx 0; border-bottom: 1rpx solid var(--color-surface-2);
+}
+.stat-list-row:last-child { border-bottom: none; }
+
+.row-left {
+  flex: none; width: 220rpx;
+  display: flex; align-items: center; gap: 14rpx;
+}
+.row-icon {
+  width: 48rpx; height: 48rpx; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22rpx; font-weight: 600;
+}
+.row-name { display: flex; flex-direction: column; gap: 4rpx; }
+.row-name-text { font-size: 24rpx; color: var(--color-text-1); line-height: 1.2; }
+.row-percent { font-size: 20rpx; color: var(--color-text-2); }
+
+/* 进度条 */
+.row-bar-bg {
+  flex: 1; height: 10rpx; background: var(--color-surface-2); border-radius: 5rpx;
+  margin: 0 20rpx; overflow: hidden;
+}
+.row-bar-fill { height: 100%; border-radius: 5rpx; }
+
+.row-right {
+  flex: none; min-width: 160rpx; text-align: right;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4rpx;
+}
+.row-value { font-size: 26rpx; font-weight: 500; color: var(--color-text-1); }
+.row-trend { display: flex; align-items: center; gap: 4rpx; font-size: 20rpx; }
+.row-trend.up { color: #D9A06B; }
+.row-trend.down { color: var(--color-text-2); }
+.row-arrow { font-size: 18rpx; }
+
+.stat-empty {
+  text-align: center; padding: 60rpx 24rpx; font-size: 24rpx; color: var(--color-text-2);
+}
+
+/* ===== 月份选择：底部弹窗（竖向滚动，注册月 → 当月） ===== */
+.time-caret { font-size: 20rpx; color: var(--color-text-2); margin-left: 8rpx; }
+
+.month-popup {
+  position: fixed; left: 0; right: 0; top: 0; bottom: 0;
+  background: var(--color-mask);
+  z-index: 1500;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.month-panel {
+  background: var(--color-bg);
+  border-radius: 32rpx 32rpx 0 0;
+  box-shadow: 0 -8rpx 30rpx rgba(120, 90, 60, 0.10);
+  max-height: 72vh;
+  display: flex; flex-direction: column;
+  /* V141：底部还要再避开**底部导航栏**（看板是 tab 页，tabBar 压在最上层）——
+     少了这一项，月份列表最后几项就落在 tabBar 底下，看得见一半、点不着（同 V140 那个"自定义日期"弹层）。 */
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom) + var(--tabbar-h, 0px));
+  animation: monthUp 0.22s ease;
+}
+@keyframes monthUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.month-grip {
+  width: 72rpx; height: 8rpx; border-radius: 4rpx;
+  background: var(--color-divider); margin: 16rpx auto 4rpx;
+}
+.month-head {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16rpx 32rpx 20rpx;
+}
+.month-title { font-size: 30rpx; font-weight: 600; color: var(--color-text-1); }
+.month-close {
+  position: absolute; right: 28rpx; top: 8rpx;
+  font-size: 40rpx; line-height: 1; color: var(--color-text-2);
+  padding: 8rpx 12rpx;
+}
+
+.month-scroll { flex: 1; height: 0; min-height: 0; padding: 0 24rpx; }
+.month-item {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 92rpx; padding: 0 28rpx; margin-bottom: 12rpx;
+  background: var(--color-surface); border-radius: 16rpx;
+  box-shadow: 0 2rpx 10rpx rgba(120, 90, 60, 0.04);
+  transition: transform 0.12s ease;
+}
+.month-item:active { transform: scale(0.985); }
+.month-text { font-size: 30rpx; color: var(--color-text-1); letter-spacing: 1rpx; }
+.month-item.active { background: var(--color-primary); }
+.month-item.active .month-text { color: var(--color-primary-on); font-weight: 500; }
+.month-check { font-size: 28rpx; color: var(--color-primary-on); }
+
+/* ===== 第二层明细：某个大类 / 品类下的具体物料或成品 ===== */
+.dt-popup {
+  position: fixed; left: 0; right: 0; top: 0; bottom: 0;
+  z-index: 1100;
+}
+.dt-mask {
+  position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+  background: var(--color-mask);
+}
+/* 与统计弹窗同理：面板高度用「百分比」定死（不用 vh，部分基础库不认），
+   标题栏绝对定位固定在顶部，滚动区靠 top 偏移拿到一个确定高度 */
+.dt-panel {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 78%;
+  background: var(--color-bg);
+  border-radius: 32rpx 32rpx 0 0;
+  box-shadow: 0 -8rpx 30rpx rgba(120, 90, 60, 0.10);
+  overflow: hidden;
+}
+.dt-head {
+  position: absolute; left: 0; right: 0; top: 0; height: 116rpx;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28rpx; box-sizing: border-box;
+}
+.dt-head-left { display: flex; align-items: baseline; gap: 12rpx; }
+.dt-title { font-size: 32rpx; font-weight: 600; color: var(--color-text-1); }
+.dt-count { font-size: 24rpx; color: var(--color-text-2); }
+.dt-close {
+  width: 56rpx; height: 56rpx; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40rpx; line-height: 1; color: var(--color-text-2); background: var(--color-surface-2);
+}
+/* 滚动区：靠绝对定位的 top/bottom 拿到确定高度（顶部留给标题栏 116rpx）。
+   V141：底部照样要避开 tabBar —— 同上，改用 `50rpx + var(--tabbar-h, 0px)`（看板上仍是 160rpx） */
+.dt-scroll {
+  position: absolute; left: 0; right: 0; top: 116rpx; bottom: 0;
+  box-sizing: border-box;
+  padding: 0 28rpx calc(50rpx + env(safe-area-inset-bottom) + var(--tabbar-h, 0px));
+}
+.dt-row {
+  display: flex; align-items: center; gap: 20rpx;
+  background: var(--color-surface); border-radius: 24rpx; padding: 20rpx;
+  margin-bottom: 16rpx;
+}
+.dt-row:active { background: var(--color-surface-2); }
+.dt-thumb { width: 88rpx; height: 88rpx; border-radius: 20rpx; flex: none; }
+.dt-thumb.ph-fill { font-size: 34rpx; }
+.dt-body { flex: 1; min-width: 0; }
+.dt-name {
+  font-size: 28rpx; color: var(--color-text-1);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dt-sub {
+  font-size: 24rpx; color: var(--color-text-2); margin-top: 6rpx;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dt-val { flex: none; font-size: 26rpx; color: var(--color-text-1); font-weight: 600; }
+.dt-empty { text-align: center; color: var(--color-text-3); font-size: 26rpx; padding: 80rpx 0; }
+
+/* 数据体检提示条（仅账目不一致时出现） */
+.ck-alert {
+  display: flex; align-items: center; justify-content: space-between;
+  /* V116b：间距挪到**下边距** —— 它若显示就是带下第一行，留上边距会让分界线
+     下面那半变宽（界线就不在两行字中间了）。 */
+  margin: 0 24rpx 16rpx; padding: 18rpx 24rpx;
+  background: #FFF7E8; border: 1rpx solid #F2D9A4; border-radius: 16rpx;
+}
+.ck-alert-text { flex: 1; font-size: 24rpx; color: #8A6116; }
+.ck-alert-close { flex: none; padding: 0 8rpx 0 20rpx; color: #B08D4A; font-size: 26rpx; }

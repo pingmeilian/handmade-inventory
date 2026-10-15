@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "看板",
+  "usingComponents": {
+    "empty": "/components/empty/empty",
+    "line-chart": "/components/line-chart/line-chart",
+    "date-picker-sheet": "/components/date-picker-sheet/date-picker-sheet"
+  }
+}

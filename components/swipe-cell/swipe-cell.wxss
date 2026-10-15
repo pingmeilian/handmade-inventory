@@ -1,0 +1,61 @@
+/* components/swipe-cell/swipe-cell.wxss —— 左滑露出操作区
+   配色与圆角一律走宿主 token 且**自带兜底值**：这样它既能融入宿主主题，
+   也能在没有 token 的环境里独立工作（复用边界的体现）。
+   卡面 vs 下沉底的口径见 pages/commission/list.wxss 的注释。 */
+
+.swipe {
+  position: relative;
+  overflow: hidden;                              /* 内容滑出时裁掉，不让它越过卡片边界 */
+  border-radius: var(--radius-card, 24rpx);
+  background: var(--color-surface, var(--color-surface));     /* 同时兜住"操作区从卡片缝里透出来" */
+  box-shadow: var(--shadow-card, none);          /* 卡片的阴影移到这一层（内层卡片被裁掉了） */
+}
+
+.swipe-body {
+  position: relative;
+  z-index: 1;                                    /* 盖在操作区之上：不透出 */
+  background-color: inherit;                     /* 继承宿主的卡面色 */
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+}
+/* 跟手期间必须无过渡，否则手指走一步、画面追一步（"橡皮筋"延迟感） */
+.swipe.is-dragging .swipe-body { transition: none; }
+
+/* 操作区：贴在 reveal 侧。⚠️ 两套定位缺一不可 ——
+   只写 --left 的话，direction=right（RTL）时会出现"滑得动但操作区在反侧" */
+.swipe-actions {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: row;
+  z-index: 0;
+}
+.swipe-actions--left { right: 0; }                        /* 左滑 → 操作区在右 */
+/* RTL：操作区在左，且按钮顺序要镜像（row-reverse）。
+   不镜像的话，"最先被露出来的是哪个按钮"在两个方向上会相反 —— 视觉与手感不一致。
+   镜像后两个方向一致：最后配置的那个（破坏性操作）最先露出来。 */
+.swipe-actions--right { left: 0; flex-direction: row-reverse; }
+
+.swipe-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  color: #fff;
+  overflow: hidden;
+}
+.swipe-action.is-disabled { opacity: 0.45; }
+.sa-hover { filter: brightness(0.92); }    /* 触摸/鼠标按下的反馈（PC 上鼠标也能看到） */
+
+.sa-ico { width: 40rpx; height: 40rpx; }
+.sa-ico-text { font-size: 34rpx; line-height: 1; }
+.sa-txt { font-size: 22rpx; line-height: 1.2; white-space: nowrap; }
+
+/* 主题色。默认给的是本项目温柔色系；想换成微信会话列表那套高饱和色（蓝/橙/红），
+   改这四行即可，不必动结构。 */
+.sa-primary { background: var(--color-primary, var(--color-primary)); }
+.sa-default { background: #A79A8C; }
+.sa-warning { background: var(--color-warning, #E0A26B); }
+.sa-danger { background: var(--color-danger, #D9786A); }

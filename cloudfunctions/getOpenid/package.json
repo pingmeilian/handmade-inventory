@@ -1,0 +1,9 @@
+{
+  "name": "getOpenid",
+  "version": "1.0.0",
+  "description": "返回调用者的真实微信 openid —— 云备份的身份地基",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

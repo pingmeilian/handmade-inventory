@@ -1,0 +1,75 @@
+/* pages/settings/listEditor.wxss */
+.cfg-card {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--color-surface); border-radius: var(--radius-card);
+  padding: 28rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-card);
+}
+.cfg-main { flex: 1; }
+.cfg-name { font-size: 30rpx; font-weight: 500; color: var(--color-text-1); }
+.cfg-sub { display: block; font-size: 22rpx; color: var(--color-text-3); margin-top: 8rpx; }
+.cfg-del { color: var(--color-danger); font-size: 26rpx; margin-left: 20rpx; }
+
+.mask { position: fixed; inset: 0; background: var(--color-mask); z-index: 100; display: flex; align-items: flex-end; }
+.sheet { width: 100%; background: var(--color-surface); border-radius: 32rpx 32rpx 0 0; padding: 36rpx 32rpx calc(36rpx + env(safe-area-inset-bottom)); }
+.sheet-title { font-size: 32rpx; font-weight: 600; margin-bottom: 24rpx; color: var(--color-text-1); }
+.sheet-ops { display: flex; gap: 20rpx; margin-top: 28rpx; }
+.sheet-ops .btn { flex: 1; }
+
+.field-switch { display: flex; align-items: center; justify-content: space-between; }
+.switch {
+  width: 88rpx; height: 48rpx; border-radius: 24rpx;
+  background: var(--color-surface-2); position: relative;
+  transition: background 0.2s;
+}
+.switch.on { background: var(--color-primary); }
+.switch-knob {
+  position: absolute; left: 4rpx; top: 4rpx;
+  width: 40rpx; height: 40rpx; border-radius: 20rpx;
+  background: var(--color-surface); box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.15);
+  transition: transform 0.2s;
+}
+.switch.on .switch-knob { transform: translateX(40rpx); }
+
+/* 属性卡片：一级分类 */
+.attr-card {
+  background: var(--color-surface-2); border-radius: var(--radius-inner);
+  padding: 20rpx; margin-bottom: 16rpx;
+}
+.attr-card-head { display: flex; align-items: center; justify-content: space-between; }
+.attr-card-name { font-size: 28rpx; font-weight: 600; color: var(--color-text-1); }
+.attr-card-menu {
+  font-size: 40rpx; line-height: 1; color: var(--color-text-3);
+  padding: 0 10rpx; margin: -10rpx -10rpx -10rpx 0;
+}
+.attr-opts-scroll { margin-top: 16rpx; width: 100%; white-space: nowrap; }
+.attr-opts-inner { display: inline-flex; align-items: center; gap: 14rpx; padding: 2rpx 0; }
+.opt-chip {
+  flex: none; padding: 10rpx 22rpx; font-size: 24rpx; color: var(--color-text-2);
+  background: var(--color-surface); border: 1rpx solid var(--color-divider);
+  border-radius: 999rpx;
+}
+.opt-add {
+  display: inline-block; margin-top: 16rpx; padding: 10rpx 22rpx; font-size: 24rpx;
+  color: var(--color-primary); background: transparent; border: 1rpx dashed var(--color-primary);
+  border-radius: 999rpx;
+}
+.btn-ghost {
+  background: transparent; color: var(--color-primary);
+  border: 1rpx solid var(--color-primary);
+}
+.btn-small { padding: 14rpx 0; font-size: 26rpx; border-radius: var(--radius-inner); }
+.btn-block { width: 100%; text-align: center; box-sizing: border-box; }
+
+/* 居中 prompt 弹窗：替代原生 wx.showModal editable */
+.mask.mask-center { align-items: center; justify-content: center; }
+.sheet.sheet-center {
+  width: 84%; max-width: 620rpx;
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  padding: 40rpx 32rpx;
+  margin-bottom: 20vh;
+  box-sizing: border-box;
+}
+.prompt-sheet .field { margin-bottom: 0; }
+.prompt-sheet .field-control { min-height: var(--input-md); }
+

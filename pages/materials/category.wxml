@@ -1,0 +1,15 @@
+<!-- pages/materials/category.wxml —— 手作空间（空间）切换 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <view class="section-title">选择手作空间<text class="sub">切换后物料库仅显示该空间数据</text></view>
+
+  <view class="cat-card {{item.active?'on':''}}" wx:for="{{list}}" wx:key="id" data-id="{{item.id}}" bindtap="setActive">
+    <view class="cat-dot {{item.active?'on':''}}"></view>
+    <text class="cat-name">{{item.name}}</text>
+    <text wx:if="{{item.active}}" class="tag tag-soft">当前</text>
+  </view>
+
+  <view class="btn btn-primary btn-large btn-block add-btn" bindtap="addCat">+ 新建手作空间</view>
+  <view class="t-min tip">重命名 / 删除请在「我的 → 设置 → 手作空间管理」中操作</view>
+</view>

@@ -1,0 +1,183 @@
+<!-- pages/loss/index.wxml —— 损耗：资产 / 工具 / 耗材 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <!-- 顶部常驻：本月损耗成本合计（置顶） -->
+  <view class="top-loss">
+    <view class="top-loss-val">{{topLoss}}</view>
+    <view class="top-loss-break">{{topLossBreak}}</view>
+  </view>
+
+  <!-- 分段切换（资产 / 工具 / 耗材） -->
+  <view class="segment">
+    <view wx:for="{{segs}}" wx:key="key" class="segment-item {{seg===item.key?'active':''}}" data-seg="{{item.key}}" bindtap="switchSeg">{{item.name}}</view>
+  </view>
+
+  <!-- 耗材 -->
+  <view wx:if="{{seg==='consumable'}}">
+    <block wx:if="{{cGroups.length}}">
+      <view class="group-nav">
+        <view class="group-pill {{cFilter===g.key?'active':''}}" wx:for="{{cGroups}}" wx:key="key" wx:for-item="g" data-group="{{g.key}}" bindtap="switchGroup">{{g.title}}<text class="gc">{{g.items.length}}</text></view>
+      </view>
+      <view wx:for="{{cGroups}}" wx:key="key" wx:for-item="g" wx:if="{{cFilter===g.key}}">
+        <view class="loss-card" wx:for="{{g.items}}" wx:key="id" wx:for-item="item">
+          <view class="loss-main">
+            <view class="loss-name">{{item.name}}<text wx:if="{{item.spec}}" class="loss-spec"> · {{item.spec}}</text></view>
+            <view class="loss-sub">{{item.keySub}}</view>
+            <view class="detail-toggle" bindtap="toggleDetail" data-id="{{item.id}}">{{openId===item.id ? '收起详情' : '详情 ›'}}</view>
+            <view wx:if="{{openId===item.id}}" class="loss-detail">
+              <view class="loss-dates">
+                <text class="d">入库 {{item.inDate}}</text>
+                <text wx:if="{{item.useDate}}" class="d">使用 {{item.useDate}}</text>
+                <text wx:if="{{item.outDate}}" class="d">出库 {{item.outDate}}</text>
+              </view>
+            </view>
+          </view>
+          <view class="loss-right">
+            <view class="tag {{item.status==='out'?'':(item.status==='inUse'?'tag-soft':'tag-success')}}">{{item.statusText}}</view>
+          </view>
+          <view class="loss-actions">
+            <view wx:if="{{item.primaryAct}}" class="act act-primary" data-id="{{item.id}}" catchtap="{{item.primaryMethod}}">{{item.primaryAct}}</view>
+            <view wx:if="{{item.actions.length}}" class="act act-more" data-id="{{item.id}}" catchtap="openMenu">更多 ›</view>
+          </view>
+        </view>
+      </view>
+    </block>
+    <empty wx:else title="还没有耗材" desc="线、胶水等随用随记，月底自动分摊成本" btnText="+ 添加耗材" bind:action="goEdit"></empty>
+  </view>
+
+  <!-- 资产 -->
+  <view wx:if="{{seg==='asset'}}">
+    <block wx:if="{{aGroups.length}}">
+      <view class="group-nav">
+        <view class="group-pill {{aFilter===g.key?'active':''}}" wx:for="{{aGroups}}" wx:key="key" wx:for-item="g" data-group="{{g.key}}" bindtap="switchGroup">{{g.title}}<text class="gc">{{g.items.length}}</text></view>
+      </view>
+      <view wx:for="{{aGroups}}" wx:key="key" wx:for-item="g" wx:if="{{aFilter===g.key}}">
+        <view class="loss-card" wx:for="{{g.items}}" wx:key="id" wx:for-item="item">
+          <view class="loss-main">
+            <view class="loss-name">{{item.name}}</view>
+            <view class="loss-sub">{{item.keySub}}</view>
+            <view class="detail-toggle" bindtap="toggleDetail" data-id="{{item.id}}">{{openId===item.id ? '收起详情' : '详情 ›'}}</view>
+            <view wx:if="{{openId===item.id}}" class="loss-detail">
+              <view class="loss-dates">
+                <text class="d">入库 {{item.inDate}}</text>
+                <text wx:if="{{item.scrapDate}}" class="d">报废 {{item.scrapDate}}</text>
+              </view>
+              <view wx:if="{{item.repairs.length}}" class="repair-block">
+                <view class="repair-toggle" bindtap="toggleRepair" data-id="{{item.id}}">维修 {{item.repairs.length}} 次 {{openRepairId===item.id?'收起':'›'}}</view>
+                <view wx:if="{{openRepairId===item.id}}" class="repair-list">
+                  <view wx:for="{{item.repairs}}" wx:key="index" wx:for-item="rp" wx:for-index="ri" class="repair-row">
+                    <text class="rp-date">{{rp.date}}</text>
+                    <text class="rp-fee">¥{{rp.fee}}</text>
+                    <text wx:if="{{rp.note}}" class="rp-note">{{rp.note}}</text>
+                    <view class="rp-acts">
+                      <text class="rp-edit" data-id="{{item.id}}" data-idx="{{ri}}" catchtap="editRepair">编辑</text>
+                      <text class="rp-del" data-id="{{item.id}}" data-idx="{{ri}}" catchtap="delRepair">删除</text>
+                    </view>
+                  </view>
+                </view>
+              </view>
+            </view>
+          </view>
+          <view class="loss-right">
+            <view class="tag {{item.status==='inUse'?'tag-success':'badge-warning'}}">{{item.statusText}}</view>
+          </view>
+          <view class="loss-actions">
+            <view wx:if="{{item.primaryAct}}" class="act act-primary" data-id="{{item.id}}" catchtap="{{item.primaryMethod}}">{{item.primaryAct}}</view>
+            <view wx:if="{{item.actions.length}}" class="act act-more" data-id="{{item.id}}" catchtap="openMenu">更多 ›</view>
+          </view>
+        </view>
+      </view>
+    </block>
+    <empty wx:else title="还没有资产" desc="缝纫机、熨斗等大件记原值与寿命，按月提折旧" btnText="+ 添加资产" bind:action="goEdit"></empty>
+  </view>
+
+  <!-- 工具 -->
+  <view wx:if="{{seg==='tool'}}">
+    <block wx:if="{{tGroups.length}}">
+      <view class="group-nav">
+        <view class="group-pill {{tFilter===g.key?'active':''}}" wx:for="{{tGroups}}" wx:key="key" wx:for-item="g" data-group="{{g.key}}" bindtap="switchGroup">{{g.title}}<text class="gc">{{g.items.length}}</text></view>
+      </view>
+      <view wx:for="{{tGroups}}" wx:key="key" wx:for-item="g" wx:if="{{tFilter===g.key}}">
+        <view class="loss-card" wx:for="{{g.items}}" wx:key="id" wx:for-item="item">
+          <view class="loss-main">
+            <view class="loss-name">{{item.name}}</view>
+            <view class="loss-sub">{{item.keySub}}</view>
+            <view class="detail-toggle" bindtap="toggleDetail" data-id="{{item.id}}">{{openId===item.id ? '收起详情' : '详情 ›'}}</view>
+            <view wx:if="{{openId===item.id}}" class="loss-detail">
+              <view class="loss-dates">
+                <text class="d">入库 {{item.inDate}}</text>
+                <text wx:if="{{item.replaceDate}}" class="d">换新 {{item.replaceDate}}</text>
+              </view>
+            </view>
+          </view>
+          <view class="loss-right">
+            <view class="tag {{item.status==='inUse'?'tag-success':'badge-warning'}}">{{item.statusText}}</view>
+          </view>
+          <view class="loss-actions">
+            <view wx:if="{{item.primaryAct}}" class="act act-primary" data-id="{{item.id}}" catchtap="{{item.primaryMethod}}">{{item.primaryAct}}</view>
+            <view wx:if="{{item.actions.length}}" class="act act-more" data-id="{{item.id}}" catchtap="openMenu">更多 ›</view>
+          </view>
+        </view>
+      </view>
+    </block>
+    <empty wx:else title="还没有工具" desc="剪刀、尺子等只换不修，坏了记一笔换新即可" btnText="+ 添加工具" bind:action="goEdit"></empty>
+  </view>
+
+  <!-- 其它支出（V131）：快递费 / 摊位费 / 电费… 平铺、无分组、无状态流转 -->
+  <view wx:if="{{seg==='other'}}">
+    <block wx:if="{{oItems.length}}">
+      <view class="other-total">共 {{oItems.length}} 笔 · 合计 ≈ ¥{{oTotal}}<text class="t-min">　按当期全额计入累计消费</text></view>
+      <view class="loss-card" wx:for="{{oItems}}" wx:key="id" wx:for-item="item">
+        <view class="loss-main">
+          <view class="loss-name">{{item.name}}</view>
+          <view class="loss-sub">{{item.keySub}}</view>
+        </view>
+        <view class="loss-right">
+          <view class="tag tag-soft">{{item.amountText}}</view>
+        </view>
+        <view class="loss-actions">
+          <view class="act act-more" data-id="{{item.id}}" catchtap="openMenu">更多 ›</view>
+        </view>
+      </view>
+    </block>
+    <empty wx:else title="还没有其它支出" desc="快递费、摊位费、电费等杂项开销记在这里，累计总账会算进去" btnText="+ 添加其它支出" bind:action="goEdit"></empty>
+  </view>
+
+  <view class="fab" bindtap="goEdit">+</view>
+
+  <!-- 工具换新弹层 -->
+  <view wx:if="{{sheetShow}}" class="mask" bindtap="hideSheet">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-title">换新工具（旧件报废）</view>
+      <view class="sheet-tip">新工具买价即新成本，会自动计入损耗</view>
+      <view class="field">
+        <view class="field-label">新工具名称</view>
+        <ph-input ph-class="field-control input" placeholder="默认沿用原名称" value="{{sheetName}}" bind:input="onSheetName" />
+      </view>
+      <view class="field">
+        <view class="field-label">新买价（元）<span class="req">*</span></view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="如 35" value="{{sheetPrice}}" bind:input="onSheetPrice" />
+      </view>
+      <view class="field">
+        <view class="field-label">入库日期</view>
+        <view class="field-control picker-trigger" bindtap="openSheetDate">{{sheetDate}}</view>
+      </view>
+      <view class="sheet-actions">
+        <view class="btn btn-ghost btn-large" bindtap="hideSheet">取消</view>
+        <view class="btn btn-primary btn-large btn-block" bindtap="saveReplace">确认换新</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 更多操作菜单 -->
+  <view wx:if="{{menuItem}}" class="mask" bindtap="hideMenu">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-title">{{menuItem.name}}</view>
+      <view wx:for="{{menuItem.actions}}" wx:key="method" wx:for-item="a" class="menu-act {{a.danger?'danger':''}}" data-method="{{a.method}}" data-extra="{{a.extra}}" catchtap="onMenuAction">{{a.label}}</view>
+      <view class="menu-cancel" bindtap="hideMenu">取消</view>
+    </view>
+  </view>
+
+  <date-picker-sheet show="{{dpSheet}}" title="选择入库日期" value="{{sheetDate}}" bind:change="onSheetDate" bind:confirm="closeDate" bind:cancel="closeDate" />
+</view>

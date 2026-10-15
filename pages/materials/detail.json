@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "物料详情",
+  "usingComponents": {
+    "ph-input": "/components/ph-input/ph-input"
+  }
+}

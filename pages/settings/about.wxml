@@ -1,0 +1,47 @@
+<!-- pages/settings/about.wxml —— 关于 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <!-- V146：删掉标题行「手工物料库存与成本核算」——
+       用户：「你这关于里的库存与成本核算一堆字儿是什么意思？不用写啊，去掉」。
+       它本来也是纯重复：下面那行说明里已经讲清了这是什么工具。 -->
+  <view class="card">
+    <view class="about-ver">{{version}}</view>
+    <view class="t-min">{{buildTag}}</view>
+    <view class="hr"></view>
+    <view class="t-body">一款面向手作人的轻量库存与成本核算小程序。数据全部保存在本机，无需联网也能使用。</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">合规说明</view>
+    <view class="t-body">· 数据全部保存在本机微信存储；当前版本不会上传到任何服务器。详见「隐私保护说明」。</view>
+    <view class="t-body">· 不含任何外网爬虫或自动抓取功能，符合平台审核规范。</view>
+    <view class="t-body">· 里程碑二期 AI 功能（M2）本期未开发。</view>
+  </view>
+
+  <view class="card">
+    <view class="menu-row" bindtap="goPrivacy">
+      <text class="row-title">隐私保护说明</text>
+      <text class="row-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 第二段：备份已生成，等用户点击转发。
+       微信要求 wx.shareFileMessage 必须由 TAP 手势直接触发，所以必须拆成两步
+       （详见 utils/share.js 顶部说明）——自动转发会被平台拒绝并误报成「取消」。 -->
+  <view class="card" wx:if="{{pendingBackup}}">
+    <view class="section-title">还差最后一步</view>
+    <view class="t-body">备份已生成：{{pendingBackup.name}}</view>
+    <view class="t-min">大小 {{pendingBackup.sizeText}}{{pendingBackup.imagesCount ? '，含图片 ' + pendingBackup.imagesCount + ' 张' : ''}}。请点下面按钮把它转发到「文件传输助手」保存，转发成功后才会清空。</view>
+    <view class="btn btn-primary btn-medium btn-block pending-btn" bindtap="onShareBackup">转发备份到微信</view>
+    <view class="btn btn-secondary btn-medium btn-block pending-btn" bindtap="cancelPending">暂不清空</view>
+  </view>
+
+  <view class="card">
+    <view class="menu-row" bindtap="reset">
+      <text class="row-title text-danger">清空本地数据</text>
+      <text class="row-arrow">›</text>
+    </view>
+  </view>
+  <view class="t-min tip">清空前会先强制生成一份完整备份（需转发到微信保存）；转发成功才会清空，取消则中止。清空后恢复出厂状态：默认手作空间、物料分类、单位、平台等预设全部重发。</view>
+</view>

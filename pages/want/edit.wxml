@@ -1,0 +1,48 @@
+<!-- pages/want/edit.wxml —— 想做编辑 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <view class="card">
+    <view class="field">
+      <view class="field-label">标题<span class="req">*</span></view>
+      <ph-input ph-class="field-control input" placeholder="如：羊毛毡小熊钥匙扣" value="{{title}}" bind:input="onTitle" />
+    </view>
+
+    <view class="field">
+      <view class="field-label">外部视频链接</view>
+      <ph-input ph-class="field-control input" placeholder="粘贴抖音 / B站 视频链接" value="{{link}}" bind:input="onLink" />
+    </view>
+
+    <view class="field">
+      <view class="field-label">个人备注</view>
+      <ph-input ph-class="field-control input" multiline autoHeight placeholder="想用的材料、参考图、大致做法…" value="{{desc}}" bind:input="onDesc" />
+    </view>
+
+    <view class="field">
+      <view class="field-label">附件图片（多图）</view>
+      <view class="photo-grid">
+        <view class="photo" wx:for="{{photos}}" wx:key="*this" data-url="{{item}}" bindtap="previewPhoto">
+          <image class="photo-img" src="{{item}}" mode="aspectFill" />
+          <view class="photo-del" data-idx="{{index}}" catchtap="removePhoto">×</view>
+        </view>
+        <view class="photo photo-add" bindtap="choosePhoto" wx:if="{{photos.length < 9}}">
+          <view class="add-plus">+</view>
+          <view class="add-tip">添加</view>
+        </view>
+      </view>
+      <view class="field-hint">图片仅在详情页查看，列表不渲染预览</view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">创建时间</view>
+      <view class="field-static">{{createdAt || '保存后生成'}}</view>
+    </view>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="btn btn-primary btn-large" bindtap="save">保存</view>
+    <view class="btn btn-secondary btn-large" bindtap="openConvert">转为成品</view>
+    <view class="btn btn-ghost btn-large" bindtap="goBack">返回</view>
+  </view>
+  <view class="safe-bottom"></view>
+</view>

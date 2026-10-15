@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "灵感编辑",
+  "usingComponents": {
+    "ph-input": "/components/ph-input/ph-input"
+  }
+}

@@ -1,0 +1,2 @@
+/* pages/loss/edit.wxss —— 损耗录入/编辑（复用全局 card/field/btn 等） */
+.price-hint { margin-top: 10rpx; color: var(--color-primary-deep); }

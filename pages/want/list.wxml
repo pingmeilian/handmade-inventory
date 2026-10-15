@@ -1,0 +1,67 @@
+<!-- pages/want/list.wxml —— 想做清单 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <view class="space-bar"><text class="space-name">{{spaceName}}</text></view>
+
+  <view class="seg-wrap">
+    <view class="seg">
+      <view class="seg-item {{tab==='pending'?'active':''}}" data-t="pending" bindtap="setTab">待填坑</view>
+      <view class="seg-item {{tab==='done'?'active':''}}" data-t="done" bindtap="setTab">已填坑</view>
+    </view>
+  </view>
+
+  <view wx:if="{{list.length}}">
+    <view class="std-card" wx:for="{{list}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
+      <!-- 左：图片（无图兜底缝纫图标） -->
+      <view class="std-thumb">
+        <image wx:if="{{item.cover}}" class="pic-img" src="{{item.cover}}" mode="aspectFill" />
+        <image wx:else class="pic-img pic-ph" src="{{placeholderIcon}}" mode="aspectFit" />
+      </view>
+      <!-- 右：标题 + 浅灰小字（来源 · 坑位状态） -->
+      <view class="std-body">
+        <view class="std-title">{{item.title}}</view>
+        <view class="std-sub">{{item.subText}}</view>
+      </view>
+      <view wx:if="{{item.done}}" class="tag tag-soft std-tag">已完成</view>
+    </view>
+  </view>
+
+  <empty wx:else title="{{tab==='done'?'还没有已填坑的':'还没有想做的'}}" desc="{{tab==='done'?'把想做的变成成品吧':'记录下你心动、想尝试做的款式'}}" btnText="+ 添加" bind:action="goEdit"></empty>
+
+  <view class="fab" bindtap="openAdd">+</view>
+
+  <!-- 快速新增弹窗（支持上传图片） -->
+  <view class="add-mask" wx:if="{{showAdd}}" bindtap="closeAdd" catchtouchmove="noop">
+    <view class="add-dialog" catchtap="noop">
+      <view class="add-title">新增想做</view>
+
+      <view class="add-input-wrap">
+        <ph-input ph-class="add-input" placeholder="标题，如：复古格子发带" value="{{addTitle}}" bind:input="onAddTitle" />
+      </view>
+      <view class="add-input-wrap">
+        <ph-input ph-class="add-input" placeholder="视频链接（选填）" value="{{addLink}}" bind:input="onAddLink" />
+      </view>
+
+      <view class="add-photos">
+        <view class="add-pic" wx:for="{{addPhotos}}" wx:key="*this">
+          <image class="add-pic-img" src="{{item}}" mode="aspectFill" />
+          <view class="add-pic-del" data-idx="{{index}}" catchtap="removeAddPhoto">×</view>
+        </view>
+        <view class="add-pic add-pic-add" bindtap="chooseAddPhoto" wx:if="{{addPhotos.length < 6}}">
+          <view class="add-plus">+</view>
+          <view class="add-plus-tip">上传</view>
+        </view>
+      </view>
+
+      <!-- V138：走 `goAddDetail`（不是 `goEdit`）—— 它会把弹窗里已填的标题 / 链接 / 图片带过去。
+           改前这里直接 `goEdit`（裸跳），用户在弹窗里填的内容全丢。 -->
+      <view class="add-more" bindtap="goAddDetail">详细编辑 ›</view>
+
+      <view class="add-actions">
+        <view class="add-btn cancel" bindtap="closeAdd">取消</view>
+        <view class="add-btn confirm" bindtap="saveAdd">保存</view>
+      </view>
+    </view>
+  </view>
+</view>

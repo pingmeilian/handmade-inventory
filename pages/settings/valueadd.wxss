@@ -1,0 +1,7 @@
+/* pages/settings/valueadd.wxss */
+.notice { background: var(--color-primary-soft); }
+.notice-title { font-size: 32rpx; font-weight: 600; color: var(--color-primary-deep); margin-bottom: 12rpx; }
+.feat { padding: 28rpx; }
+.feat-name { font-size: 30rpx; font-weight: 600; color: var(--color-text-1); }
+.feat-desc { font-size: 24rpx; color: var(--color-text-2); margin-top: 10rpx; }
+.tip { text-align: center; margin-top: 20rpx; }

@@ -1,0 +1,38 @@
+<!-- pages/settings/privacy.wxml —— 隐私保护 / 用户协议说明 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <view class="card">
+    <view class="about-title">隐私保护说明</view>
+    <view class="about-ver">最后更新：2026-09-27</view>
+    <view class="hr"></view>
+
+    <view class="sec"><text class="sec-t">1. 数据收集与存储</text>
+      <view class="t-body">本小程序的物料、成品、灵感、想做、排单、出入库等数据，全部保存在你本机的微信存储中（wx.storage）。当前版本不会将数据上传到任何服务器，开发者无法远程读取。</view>
+      <view class="t-body">你可以随时在「备份与恢复」中导出一份备份文件，自行保存到微信聊天或电脑；该文件完全由你掌控，只有你主动导入时才会被读回本机。</view>
+    </view>
+    <view class="sec"><text class="sec-t">2. 权限使用</text>
+      <view class="t-body">· 剪切板：仅在你点击「复制链接」时写入，用于把商品 / 视频链接复制到剪贴板。<br/>· 摄像头：仅在你点击「拍照」时申请，用于拍摄手作物料、成品照片。<br/>· 相册（写入）：仅在你点击「保存到相册」时申请，用于保存教程卡图片。<br/>· 选中的照片或视频：仅在你从相册选择图片时申请，用于把图片关联到物料 / 成品。<br/>· 选中的文件：仅在你点击「从聊天记录选择备份文件」时申请，用于导入你之前备份的数据。<br/>· 文件转发：仅在你主动「转发给好友」时调用，用于分享导出的 CSV / 图片。</view>
+    </view>
+    <view class="sec"><text class="sec-t">3. 信息共享</text>
+      <view class="t-body">我们不会向任何第三方共享、出售您的个人数据。若您通过微信官方能力转发文件，该文件仅在你与好友之间传递。</view>
+    </view>
+    <view class="sec"><text class="sec-t">4. 数据安全与清空</text>
+      <view class="t-body">您可随时在「我的 → 关于 → 清空本地数据」中删除全部本地数据。卸载小程序也会清除本机数据。</view>
+      <view class="t-body">清空前会自动在本机留一份「安全快照」，万一弄错了可以退回（详见「备份与恢复」页）。</view>
+    </view>
+    <view class="sec"><text class="sec-t">5. 合规说明</text>
+      <view class="t-body">本小程序不含任何外网爬虫或自动抓取功能，符合微信平台审核规范。如需查看微信官方《隐私保护指引》，可点击下方按钮（需公众平台后台已配置）。</view>
+    </view>
+
+    <view class="btn btn-secondary btn-small" bindtap="openOfficial">查看微信官方隐私协议</view>
+  </view>
+
+  <view class="card" wx:if="{{!agreed}}">
+    <view class="menu-row agree-row" bindtap="agree">
+      <text class="row-title">我已阅读并同意上述隐私政策</text>
+      <text class="row-arrow">›</text>
+    </view>
+  </view>
+  <view class="t-min tip" wx:else>您已同意隐私政策</view>
+</view>

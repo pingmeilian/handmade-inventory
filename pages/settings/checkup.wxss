@@ -1,0 +1,17 @@
+/* pages/settings/checkup.wxss —— 数据体检 */
+.ck-summary { display: flex; margin: 24rpx 0; }
+.ck-item { flex: 1; text-align: center; }
+.ck-v { font-size: 40rpx; font-weight: 600; }
+.ck-k { font-size: 22rpx; color: var(--color-text-3); margin-top: 4rpx; }
+.ck-rerun { margin-top: 16rpx; font-size: 26rpx; color: var(--color-primary); }
+.ck-row { display: flex; padding: 14rpx 0; border-bottom: 1rpx solid var(--color-divider); font-size: 26rpx; }
+.ck-row:last-of-type { border-bottom: none; }
+.ck-head { color: var(--color-text-3); font-size: 22rpx; }
+.ck-name { flex: 1.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ck-num { flex: 1; text-align: right; }
+.ck-repair { margin-top: 24rpx; }
+.ck-storage { margin: 8rpx 0 16rpx; }
+.ck-bar { height: 16rpx; background: var(--color-surface-2); border-radius: 8rpx; overflow: hidden; }
+.ck-bar-fill { height: 100%; background: var(--color-primary); border-radius: 8rpx; }
+.ck-bar-warn { background: var(--color-warning); }
+.ck-backup { margin-top: 20rpx; }

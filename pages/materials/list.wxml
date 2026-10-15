@@ -1,0 +1,78 @@
+<!-- pages/materials/list.wxml -->
+<!-- V97：主题变量落在页面根节点上（所有后代含 fixed 弹层自然继承） -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap pin-page">
+  <!-- ⚠️ 2026-10-04：顶部**不再**放空间切换胶囊 —— 三个 tab 页顶部挂同一排胶囊太重复，
+       切换只留在「看板」一处。原「切换请在物料库顶部点选」的提示语已同步改掉
+       （见 pages/settings/categories.wxml）。 -->
+
+  <!-- V116：整块固定（灰框内）—— 顶部工具条 + 分类 chips -->
+  <view class="pin-band" id="pinBand">
+  <view class="toolbar">
+    <view class="sort-btn" bindtap="toggleSort">
+      <text>排序</text>
+      <text wx:if="{{sortKey}}" class="sort-badge">1</text>
+    </view>
+    <view class="search-wrap">
+      <ph-input ph-class="top-search" placeholder="搜索物料名称" value="{{keyword}}" confirmType="search" bind:input="onSearch" />
+    </view>
+    <view class="chip bulk" bindtap="goBulk">批量入库</view>
+  </view>
+
+  <scroll-view scroll-x class="mc-scroll">
+    <view class="mc-row">
+      <view wx:for="{{mcChips}}" wx:key="id" class="mc-chip {{activeMc === item.id ? 'on' : ''}}" data-id="{{item.id}}" bindtap="pickMc">{{item.name}}</view>
+    </view>
+  </scroll-view>
+  </view>
+  <view class="pin-band-ph" style="height:{{bandH}}px;"></view>
+
+  <!-- V117：奶黄圆角面板 —— 包住分界线以下的全部内容（顶角 44rpx、左右贴边）；
+       min-height 用带高清出来：内容少时也铺到屏幕底，面板下面不露页面底色。 -->
+  <view class="content-panel" style="min-height:calc(100vh - {{bandH}}px);">
+
+  <!-- 排序弹层 -->
+  <view wx:if="{{sortOpen}}" class="mask" bindtap="closeSort">
+    <view class="sort-panel" catchtap="noop">
+      <view class="fp-title">排序方式</view>
+      <view class="sort-list">
+        <view wx:for="{{sortOptions}}" wx:key="index" wx:for-index="ridx" wx:for-item="row" class="sort-row">
+          <view wx:for="{{row}}" wx:key="key" wx:for-item="cell" class="sort-cell {{sortKey===cell.key?'on':''}}" data-k="{{cell.key}}" bindtap="setSort">
+            <text>{{cell.name}}</text>
+            <text wx:if="{{sortKey===cell.key}}" class="sort-check">✓</text>
+          </view>
+        </view>
+      </view>
+      <view class="fp-actions">
+        <view class="fp-btn ghost" bindtap="closeSort">取消</view>
+        <view class="fp-btn ghost" bindtap="clearSort">清除</view>
+        <view class="fp-btn primary" bindtap="applySort">完成</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{list.length}}">
+    <view class="std-card" wx:for="{{list}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
+      <view wx:if="{{item.thumb}}" class="std-thumb">
+        <image src="{{item.thumb}}" mode="aspectFill" />
+      </view>
+      <view wx:else class="std-thumb ph-fill" style="background:{{item.color}};color:{{item.ink}}">{{item.placeholder}}</view>
+      <view class="std-body">
+        <view class="std-title">{{item.name}}</view>
+        <view class="std-spec">
+          <text class="std-seg">{{item.mcName}}</text>
+          <text class="std-sep">·</text>
+          <text class="std-seg">{{item.stockText}}</text>
+          <text class="std-sep">·</text>
+          <text class="std-seg">{{item.priceSeg}}</text>
+          <text class="std-sep">·</text>
+          <text class="std-seg std-seg-total">总价¥{{item.totalPriceText}}</text>
+        </view>
+      </view>
+      <view wx:if="{{item.low}}" class="tag badge-warning std-tag">低库存</view>
+    </view>
+  </view>
+
+  <empty wx:else title="还没有物料" desc="先添加一件物料，开始整理你的手作材料吧" btnText="+ 添加物料" bind:action="goEdit"></empty>
+  </view>
+</view>

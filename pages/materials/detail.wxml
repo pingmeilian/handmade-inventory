@@ -1,0 +1,267 @@
+<!-- pages/materials/detail.wxml —— 物料详情 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap" wx:if="{{m}}">
+  <!-- 头部信息 -->
+  <!-- 图集缩略图：面料实拍图在前，订单截图在后；横向滚动浏览，固定高度卡片 -->
+  <view wx:if="{{gallery.length}}" class="card photo-card">
+    <scroll-view class="photo-scroll" scroll-x>
+      <view wx:for="{{gallery}}" wx:key="src" class="thumb-item" data-i="{{index}}" bindtap="previewPhoto">
+        <image class="thumb-img" src="{{item.src}}" mode="aspectFill" lazy-load />
+        <view wx:if="{{item.type === 'order'}}" class="thumb-badge">订单截图</view>
+      </view>
+    </scroll-view>
+    <view class="photo-count">共 {{gallery.length}} 张</view>
+  </view>
+
+  <view class="card head">
+    <view class="head-top">
+      <view class="head-name">{{m.name}}</view>
+      <view wx:if="{{low}}" class="tag badge-warning">低库存</view>
+    </view>
+    <view class="head-sub">{{mcName}} · {{bcName}} · 当前均价 ¥{{avgPrice}}/{{avgUnit}}</view>
+    <view class="head-stock">
+      <text class="stock-label">当前库存</text>
+      <text class="stock-value {{low?'text-warning':''}}">{{stockText}}</text>
+    </view>
+    <!-- 刀口布（按批估量）无面积口径，隐藏预警阈值行 -->
+    <view wx:if="{{showHeadTh}}" class="head-th">预警阈值：{{thresholdText}}</view>
+  </view>
+
+  <!-- 自定义属性 -->
+  <view wx:if="{{attrList.length}}" class="card">
+    <view class="section-title">属性</view>
+    <view class="attr-grid">
+      <view wx:for="{{attrList}}" wx:key="key" class="attr-item">
+        <text class="attr-k">{{item.key}}</text>
+        <text class="attr-v">{{item.value}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 操作 -->
+  <view class="ops">
+    <view class="btn btn-secondary btn-medium" bindtap="openIn">入库</view>
+    <view class="btn btn-secondary btn-medium" bindtap="openOut">出库</view>
+    <view class="btn btn-secondary btn-medium" bindtap="openStocktakeEntry">盘库</view>
+    <view class="btn btn-text btn-medium" bindtap="goEdit">编辑</view>
+  </view>
+
+  <!-- 面料布片 -->
+  <view wx:if="{{isFabric && pieces.length}}" class="card">
+    <view class="sec-head" bindtap="togglePieces">
+      <view class="section-title">布片清单<text class="sub">{{pieces.length}} 片在库</text></view>
+      <view class="sec-right">
+        <view class="collapse-arrow">{{piecesExpanded ? '收起' : '展开'}}</view>
+      </view>
+    </view>
+    <view wx:for="{{pieces}}" wx:key="id" wx:for-index="idx" wx:for-item="item" wx:if="{{piecesExpanded || idx < 3}}" class="piece-row">
+      <!-- 长按放大（V113）：看清这块布的真实形状与已有缺口。缩略图按真实比例缩，
+           500×150 这种长条必然被压成细带 —— 那是缩略图的职责上限，不该硬塞进同一张图。 -->
+      <view class="piece-thumb" data-idx="{{idx}}" bindlongpress="onZoomPiece">
+        <!-- 这块布的真实形状（外框按比例缩略 + 已有的缺口照实画）—— V82 -->
+        <view class="piece-shape" style="width:{{item.shape.w}}rpx;height:{{item.shape.h}}rpx;">
+          <view wx:for="{{item.shape.holes}}" wx:for-item="h" wx:key="k" class="piece-hole"
+                style="left:{{h.left}}rpx;bottom:{{h.bottom}}rpx;width:{{h.w}}rpx;height:{{h.h}}rpx;"></view>
+        </view>
+      </view>
+      <view class="piece-info">
+        <text class="piece-size">{{item.lengthText}}×{{item.widthText}}cm</text>
+        <text class="piece-area">{{item.area}}</text>
+      </view>
+      <view class="piece-right">
+        <text class="piece-more" data-idx="{{idx}}" catchtap="openPieceActions">···</text>
+        <view class="tag {{item.tagClass}}">{{item.tag}}</view>
+      </view>
+    </view>
+    <view wx:if="{{!piecesExpanded && pieces.length > 3}}" class="expand-tip" bindtap="togglePieces">展开全部 {{pieces.length}} 片 ›</view>
+    <view wx:if="{{piecesExpanded && pieces.length > 3}}" class="expand-tip" bindtap="togglePieces">收起</view>
+  </view>
+
+  <!-- 其他信息（折叠） -->
+  <view wx:if="{{m._pfDisplay || m.shopName || m.productUrl || m.remark}}">
+    <view class="section-title toggler" bindtap="toggleMore">更多信息<text class="sub">点击展开</text><view class="collapse-arrow">{{moreExpanded ? '收起' : '展开'}}</view></view>
+    <view wx:if="{{moreExpanded}}" class="card">
+      <view wx:if="{{m._pfDisplay}}" class="list-row"><text class="row-title">购买平台</text><text class="row-sub">{{m._pfDisplay}}</text></view>
+      <view wx:if="{{m.shopName}}" class="list-row"><text class="row-title">店铺名</text><text class="row-sub">{{m.shopName}}</text></view>
+      <view wx:if="{{m.productUrl}}" class="list-row">
+        <text class="row-title">商品链接</text>
+        <!-- user-select：复制失败时（failText 就是这么提示的）用户要能长按手动兜底 -->
+        <text class="row-sub url-sub" user-select="{{true}}" data-url="{{m.productUrl}}" bindtap="copyUrl">{{m.productUrl}}</text>
+      </view>
+      <view wx:if="{{m.remark}}" class="list-row"><text class="row-title">备注</text><text class="row-sub">{{m.remark}}</text></view>
+    </view>
+  </view>
+
+  <!-- 出入库流水 -->
+  <view class="card">
+    <view class="sec-head" bindtap="toggleFlows">
+      <view class="section-title">库存流水<text class="sub">{{flows.length}} 条</text></view>
+      <view class="collapse-arrow">{{flowsExpanded ? '收起' : '展开'}}</view>
+    </view>
+    <view wx:if="{{flows.length}}">
+      <view wx:for="{{flows}}" wx:key="index" wx:if="{{flowsExpanded || index < 3}}" class="flow-row">
+        <view class="flow-left">
+          <text class="flow-type {{item.typeClass}}">{{item.typeText}}</text>
+          <text class="flow-remark">{{item.remark}}</text>
+        </view>
+      <view class="flow-right">
+        <text class="flow-qty {{item.typeClass}}">{{item.qtyText}}</text>
+        <text wx:if="{{item.priceText}}" class="flow-price">{{item.priceText}}</text>
+        <text class="flow-bal">结余 {{item.balance}} · 资产 ¥{{item.assetText}}</text>
+        <text wx:if="{{item.canUndo}}" class="flow-undo" data-id="{{item.id}}" catchtap="undoFlow">撤销</text>
+      </view>
+      </view>
+      <view wx:if="{{!flowsExpanded && flows.length > 3}}" class="expand-tip" bindtap="toggleFlows">展开全部 {{flows.length}} 条 ›</view>
+      <view wx:if="{{flowsExpanded && flows.length > 3}}" class="expand-tip" bindtap="toggleFlows">收起</view>
+    </view>
+    <view wx:else class="t-caption">暂无流水</view>
+  </view>
+
+  <view wx:if="{{referencedBy}}" class="t-min ref-note">该物料被 {{referencedBy}} 个成品引用，删除前需先解除引用</view>
+  <view class="btn btn-danger btn-medium btn-block del-btn" bindtap="del">删除物料</view>
+  <view class="safe-bottom"></view>
+</view>
+
+<!-- 出入库操作面板 -->
+<view wx:if="{{showSheet}}" class="mask mask-center" bindtap="closeSheet">
+  <view class="sheet sheet-center" catchtap="noop">
+    <view class="sheet-title">{{sheetType === 'in' ? '入库' : '出库'}}</view>
+    <!-- ① 非面料（辅料 / 工具耗材）：按数量 -->
+    <block wx:if="{{!isFabric}}">
+      <view class="field">
+        <view class="field-label">{{sheetType === 'in' ? '入库数量' : '出库数量'}}（{{m.unit}}）</view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="0" value="{{sheetQty}}" bind:input="onSheetQty" />
+      </view>
+    </block>
+    <!-- ② 刀口布（按批估量）：按 片 / kg / g 计量，不涉及长宽与面积 -->
+    <block wx:elif="{{sheetIsBatch}}">
+      <view class="field">
+        <view class="field-label">{{sheetType === 'in' ? '入库' : '出库'}}量（{{sheetBatchUnit}}）</view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="0" value="{{sheetQty}}" bind:input="onSheetQty" />
+      </view>
+      <view class="sheet-tip">刀口布按整堆计量，直接清点片数或称重即可，无需填长宽</view>
+    </block>
+    <!-- ③ 常规整块面料：只有**入库**会开到这一层（填长宽）。
+         出库改走裁剪排版界面（选哪片布、摆在哪）—— 见 detail.js 的 openOut，
+         用户 2026-10-02：「出库只有个面积，连长宽都没有」⇒ 由用户指定位置，不再让系统替他挑。 -->
+    <block wx:else>
+      <view class="field">
+        <view class="field-label">长（cm）</view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="0" value="{{sheetLen}}" bind:input="onSheetLen" />
+      </view>
+      <view class="field">
+        <view class="field-label">宽（cm）</view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="0" value="{{sheetWid}}" bind:input="onSheetWid" />
+      </view>
+    </block>
+    <view wx:if="{{sheetType === 'in'}}" class="field">
+      <view class="field-label">本次总价（选填）</view>
+      <ph-input ph-class="field-control input" type="digit" placeholder="0.00" value="{{sheetPrice}}" bind:input="onSheetPrice" />
+    </view>
+    <view class="field">
+      <view class="field-label">备注</view>
+      <ph-input ph-class="field-control input" placeholder="选填" value="{{sheetRemark}}" bind:input="onSheetRemark" />
+    </view>
+    <view class="sheet-ops">
+      <view class="btn btn-secondary btn-medium" bindtap="closeSheet">取消</view>
+      <view class="btn btn-primary btn-medium" bindtap="confirmSheet">确定</view>
+    </view>
+  </view>
+</view>
+
+<!-- 布片盘点调整面板 -->
+<view wx:if="{{showAction && actionPiece}}" class="mask mask-center" bindtap="closeAction">
+  <view class="sheet sheet-center" catchtap="noop">
+    <view class="sheet-title">盘点调整：{{actionPiece.lengthText}}×{{actionPiece.widthText}}cm</view>
+    <view class="field">
+      <view class="field-label">实际长（cm）</view>
+      <ph-input ph-class="field-control input" type="digit" placeholder="0" value="{{actionLen}}" bind:input="onActionLen" />
+    </view>
+    <view class="field">
+      <view class="field-label">实际宽（cm）</view>
+      <ph-input ph-class="field-control input" type="digit" placeholder="0" value="{{actionWid}}" bind:input="onActionWid" />
+    </view>
+    <view class="field">
+      <view class="field-label">备注</view>
+      <ph-input ph-class="field-control input" placeholder="选填" value="{{actionRemark}}" bind:input="onActionRemark" />
+    </view>
+    <view class="sheet-ops">
+      <view class="btn btn-secondary btn-medium" bindtap="closeAction">取消</view>
+      <view class="btn btn-primary btn-medium" bindtap="confirmStocktake">确定</view>
+    </view>
+  </view>
+</view>
+
+<!-- 盘库（piece 面料）：浮动布片清单，每行右侧 2 个 tab -->
+<view wx:if="{{showStocktake}}" class="mask mask-center" bindtap="closeStocktake">
+  <view class="sheet sheet-center stocktake-float" catchtap="noop">
+    <view class="sheet-title">布片盘库</view>
+    <view class="stocktake-tip">每片均可「调整尺寸」或「整块销毁」，盈亏均记盘盈/盘亏</view>
+    <view wx:for="{{pieces}}" wx:key="id" wx:for-index="idx" wx:for-item="item" class="stk-piece-row">
+      <!-- 盘库浮层里的缩略图只有 56rpx，更看不清 ⇒ 同样可长按放大（V113）。
+           ⚠️ 用 catchlongpress：这一行右边有「调整尺寸 / 整块销毁」两个 tab，
+           长按要从它们那儿抢事件，得显式拦一层。 -->
+      <view class="piece-thumb" data-idx="{{idx}}" catchlongpress="onZoomPiece">
+        <view class="piece-shape" style="width:{{item.shapeSm.w}}rpx;height:{{item.shapeSm.h}}rpx;">
+          <view wx:for="{{item.shapeSm.holes}}" wx:for-item="h" wx:key="k" class="piece-hole"
+                style="left:{{h.left}}rpx;bottom:{{h.bottom}}rpx;width:{{h.w}}rpx;height:{{h.h}}rpx;"></view>
+        </view>
+      </view>
+      <view class="piece-info">
+        <text class="piece-size">{{item.lengthText}}×{{item.widthText}}cm</text>
+        <text class="piece-area">{{item.area}}</text>
+      </view>
+      <view class="stk-actions">
+        <view class="stk-tab" data-idx="{{idx}}" catchtap="stkAdjust">调整尺寸</view>
+        <view class="stk-tab danger" data-idx="{{idx}}" catchtap="stkDestroy">整块销毁</view>
+      </view>
+    </view>
+    <view class="sheet-ops">
+      <view class="btn btn-secondary btn-medium btn-block" bindtap="closeStocktake">关闭</view>
+    </view>
+  </view>
+</view>
+
+<!-- 盘库（刀口布 / 辅料 / 工具耗材）：填实际库存 + 实时盈亏预览 -->
+<view wx:if="{{showStocktakePanel}}" class="mask mask-center" bindtap="closeStocktakePanel">
+  <view class="sheet sheet-center" catchtap="noop">
+    <view class="sheet-title">盘库 · 填实际库存</view>
+    <view class="field">
+      <view class="field-label">实际库存（{{stkUnit}}）</view>
+      <ph-input ph-class="field-control input" type="digit" placeholder="{{stkCurrent}}" value="{{stkQty}}" bind:input="onStkQty" />
+    </view>
+    <view wx:if="{{stkPreview}}" class="stk-preview">{{stkPreview}}</view>
+    <view class="field">
+      <view class="field-label">备注</view>
+      <ph-input ph-class="field-control input" placeholder="选填" value="{{stkRemark}}" bind:input="onStkRemark" />
+    </view>
+    <view class="sheet-ops">
+      <view class="btn btn-secondary btn-medium" bindtap="closeStocktakePanel">取消</view>
+      <view class="btn btn-primary btn-medium" bindtap="confirmStocktakePanel">确定盘库</view>
+    </view>
+  </view>
+</view>
+
+<!-- 布片放大镜（V113）：长按清单里的缩略图 → 全屏按真实比例看这块布；松手关掉。
+     ⚠️ 为什么遮罩上也绑 touchend/touchcancel：手指从图上滑开再松手，也要能关掉 ——
+     只绑 touchend 的话"滑出去松手"会留下一个关不掉的浮层（用户只能杀小程序）。
+     z-index 110：高于本页的面板/弹层（100），低于 toast 之类的全局层。 -->
+<view wx:if="{{zoomOpen}}" class="zoom-layer"
+      bindtouchend="closeZoom" bindtouchcancel="closeZoom">
+  <view class="zoom-shape-wrap">
+    <view class="zoom-shape" style="width:{{zoomShape.w}}rpx;height:{{zoomShape.h}}rpx;">
+      <view wx:for="{{zoomShape.holes}}" wx:for-item="h" wx:key="k" class="zoom-hole"
+            style="left:{{h.left}}rpx;bottom:{{h.bottom}}rpx;width:{{h.w}}rpx;height:{{h.h}}rpx;"></view>
+    </view>
+  </view>
+  <text class="zoom-size">{{zoomSize}}</text>
+  <view class="zoom-tags">
+    <text class="zoom-tag" wx:if="{{zoomTag}}">{{zoomTag}}</text>
+    <!-- ⚠️ V113 修：整布**本来就没有缺口**（holes 只在裁过之后才有值）——
+         所以必须按实际给说明，不能默认"这里应该有缺口"。
+         「未被裁剪」对整布也是有用信息：它还是整幅的。 -->
+    <text class="zoom-tag {{zoomHoleN ? 'cut' : ''}}">{{zoomHoleText}}</text>
+  </view>
+  <text class="zoom-tip">松手关闭</text>
+</view>

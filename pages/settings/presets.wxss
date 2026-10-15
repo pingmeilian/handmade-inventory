@@ -1,0 +1,12 @@
+/* pages/settings/presets.wxss —— 预设设置 */
+
+/* 本页现在是**纯入口列表**（V67）。V65/V66 期间加过的两样东西都已删除：
+     · .section-title 的页面级覆盖（曾把分组标题降为"小灰标签"）
+     · .ps-main 两行式布局（曾用来放"标题 + 一行说明"）
+   ⚠️ 守卫 tests/guard-preset-entries.test.js ④ 防止它们被加回来
+      （用户 2026-09-27 明确「把说明去掉 标题也去掉」）。 */
+
+/* menu-row 是本项目「一行入口」的通用形态。
+   按项目既有约定，每页自带一份（mine / about / privacy 页也是各写一份）。 */
+.menu-row { display: flex; align-items: center; justify-content: space-between; min-height: 96rpx; padding: 16rpx 0; border-bottom: 1rpx solid var(--color-divider); }
+.menu-row:last-child { border-bottom: none; }

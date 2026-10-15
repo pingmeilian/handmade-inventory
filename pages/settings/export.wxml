@@ -1,0 +1,48 @@
+<!-- pages/settings/export.wxml —— 数据导出 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <view class="card">
+    <view class="t-body">点每项右侧的「导出」直接复制；下方按钮生成一个 Excel 文件（4 张表）。</view>
+  </view>
+
+  <view class="card">
+    <view class="exp-row" data-kind="materials" bindtap="doExport">
+      <view class="exp-main"><text class="exp-name">物料表</text><text class="exp-sub">名称 / 库存 / 价格 / 属性</text></view>
+      <view class="btn btn-primary btn-small">导出</view>
+    </view>
+    <view class="hr"></view>
+    <view class="exp-row" data-kind="products" bindtap="doExport">
+      <view class="exp-main"><text class="exp-name">成品表</text><text class="exp-sub">成本 / 售价 / 利润 / BOM</text></view>
+      <view class="btn btn-primary btn-small">导出</view>
+    </view>
+    <view class="hr"></view>
+    <view class="exp-row" data-kind="flows" bindtap="doExport">
+      <view class="exp-main"><text class="exp-name">物料出入库</text><text class="exp-sub">每笔进料 / 用料，含用在哪款成品</text></view>
+      <view class="btn btn-primary btn-small">导出</view>
+    </view>
+    <!-- 2026-09-27（V70）：原先只有物料流水，导不出「成品动过什么」。
+         拆成两张表而不是挤一张 —— 两边列不通用（物料有结余没买家、成品有买家没结余），
+         合并会得到大半是空格的表；也与界面上的两个入口对称。 -->
+    <view class="hr"></view>
+    <view class="exp-row" data-kind="productFlows" bindtap="doExport">
+      <view class="exp-main"><text class="exp-name">成品出入库</text><text class="exp-sub">每批做了几件 / 卖给了谁</text></view>
+      <view class="btn btn-primary btn-small">导出</view>
+    </view>
+  </view>
+
+  <!-- 2026-09-27（V71）：一键导出改成 xlsx（一个文件 4 个工作表）——
+       CSV 是纯文本、一个文件天生只有一张表；早先"竖着拼"导致 4 个表头混在数据里，
+       在 Excel 里既没法分别筛选、也没法求和。 -->
+  <view class="btn btn-secondary btn-large btn-block" bindtap="exportAll">一键导出 Excel（4 个工作表）</view>
+
+  <!-- 打开 / 转发入口（T-2） -->
+  <view wx:if="{{exported}}" class="card exp-actions">
+    <view class="section-title">已导出：{{exported.name}}</view>
+    <view class="t-min">文件已保存至本机，可打开预览或转发给好友。</view>
+    <view class="exp-btn-row">
+      <view class="btn btn-primary btn-medium" bindtap="openFile">打开文件</view>
+      <view class="btn btn-secondary btn-medium" bindtap="shareFile">转发给好友</view>
+    </view>
+  </view>
+</view>

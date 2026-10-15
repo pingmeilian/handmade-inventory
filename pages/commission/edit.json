@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "排单",
+  "usingComponents": {
+    "ph-input": "/components/ph-input/ph-input",
+    "picker-sheet": "/components/picker-sheet/picker-sheet",
+    "date-picker-sheet": "/components/date-picker-sheet/date-picker-sheet"
+  }
+}

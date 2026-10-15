@@ -1,0 +1,99 @@
+/* 主题化日期选择器样式：自包含，不依赖其它组件样式 */
+
+.dps-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.dps-sheet {
+  background: var(--color-surface);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  /* V141：底部留白 = 常规内边距 + 安全区 + **底部导航栏那一条**（--tabbar-h，非 tab 页为 0）。
+     ⚠️ 少了最后一项，在 tab 页（看板）上「确定」会被 tabBar 压住 ——
+        用户 2026-10-11 报的正是这个：「看板趋势曲线自定义时间这里下边的确定按钮被挡住了」。
+        tabBar 是**独立组件树、永远画在页面内容之上**（页面里 z-index 再大也盖不过它）
+        ⇒ 只能靠留白避开，抬不出来。 */
+  padding: var(--space-md) var(--space-md) calc(var(--space-md) + env(safe-area-inset-bottom) + var(--tabbar-h, 0px));
+  max-height: 78vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dps-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--color-text-1);
+  text-align: center;
+  margin-bottom: var(--space-md);
+}
+
+.dps-cols {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.dps-col {
+  flex: 1;
+  min-width: 0;
+  height: 420rpx;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-inner);
+}
+
+.dps-cell {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6rpx;
+  height: 84rpx;
+  line-height: 84rpx;
+  font-size: 30rpx;
+  color: var(--color-text-1);
+}
+
+.dps-cell.on {
+  color: var(--color-primary-deep);
+  font-weight: 600;
+}
+
+.dps-num { font-size: 32rpx; }
+.dps-unit { font-size: 24rpx; color: var(--color-text-3); }
+.dps-cell.on .dps-unit { color: var(--color-primary-deep); }
+
+/* 底部留白，保证最后一项仍可滚到可视中部 */
+.dps-pad { height: 336rpx; }
+
+.dps-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.dps-btn {
+  flex: 1;
+  min-width: 0;
+  height: var(--btn-h);
+  line-height: var(--btn-h);
+  border-radius: var(--radius-inner);
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.dps-btn-ghost {
+  background: var(--color-surface-2);
+  color: var(--color-text-1);
+}
+
+.dps-btn-primary {
+  background: var(--color-primary);
+  color: var(--color-primary-on);
+}

@@ -1,0 +1,13 @@
+/* components/empty/empty.wxss —— 温和空态（对齐 UI 规范 §6，不报错红） */
+.empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 80rpx 40rpx; text-align: center;
+}
+.empty-icon {
+  width: 200rpx; height: 200rpx; margin-bottom: 24rpx;
+  background-repeat: no-repeat; background-position: center; background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20120%20120'%3E%3Cg%20fill='none'%20stroke='%23C28E72'%20stroke-width='5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M28%2052%20L92%2052%20L83%2098%20L37%2098%20Z'/%3E%3Cpath%20d='M43%2052%20C43%2030%2077%2030%2077%2052'/%3E%3Cpath%20d='M52%2070%20L68%2070%20M50%2082%20L70%2082'/%3E%3C/g%3E%3C/svg%3E");
+}
+.empty-title { font-size: 30rpx; font-weight: 600; color: var(--color-text-1); }
+.empty-desc { font-size: 24rpx; color: var(--color-text-2); margin-top: 12rpx; line-height: 1.6; }
+.empty-btn { margin-top: 32rpx; }

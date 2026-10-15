@@ -1,0 +1,239 @@
+<!-- pages/products/detail.wxml —— 成品详情 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap" wx:if="{{p}}">
+  <!-- 照片轮播 -->
+  <view wx:if="{{p.photos && p.photos.length}}" class="card photo-card">
+    <scroll-view scroll-x class="photo-scroll">
+      <view class="photo-row">
+        <image wx:for="{{p.photos}}" wx:key="*this" class="photo-detail" src="{{item}}" mode="aspectFill" data-i="{{index}}" bindtap="previewPhoto" />
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 头部 -->
+  <view class="card head">
+    <view class="head-top">
+      <view class="head-name">{{p.name}}</view>
+      <view class="tag {{c.targetAchieved?'badge-success':'badge-warning'}}">{{c.profitRate==null?'未定价':(c.targetAchieved?'达标':'未达标')}}</view>
+    </view>
+    <view class="head-sub">{{pcName}} · {{bcName}} · {{p.nature==='sample'?'样品（仅成本）':'商品'}} · 商品在库 {{p.sellableStock||0}} · 样品在库 {{p.sampleStock||0}}</view>
+    <view class="head-price" wx:if="{{p.nature!=='sample'}}">售价 ¥{{priceText}}　利润 ¥{{profitText}}　利润率 {{profitRateText}}</view>
+    <view class="head-price" wx:else>成本 ¥{{costText.materialCost}}　（样品不出利润）</view>
+  </view>
+
+  <!-- 成本利润拆解（可折叠 → 二级面板） -->
+  <view class="card collapsible" bindtap="openSheet" data-key="cost">
+    <view class="cs-head">
+      <view class="cs-title">成本与利润</view>
+      <view class="cs-sum">{{costSummary}}</view>
+      <text class="chev">›</text>
+    </view>
+  </view>
+
+  <!-- BOM（位于成本与利润下方） -->
+  <view class="card">
+    <view class="section-title">物料清单 (BOM)</view>
+    <view wx:for="{{bomLines}}" wx:key="name" class="bom-line">
+      <text class="bom-name">{{item.name}}</text>
+      <text class="bom-spec">{{item.spec}}</text>
+      <text class="bom-cost">¥{{item.cost}}</text>
+    </view>
+    <view wx:if="{{!bomLines.length}}" class="t-caption">暂无物料</view>
+  </view>
+
+  <!-- 损耗分摊参考（可折叠 → 二级面板） -->
+  <view class="card collapsible" bindtap="openSheet" data-key="loss">
+    <view class="cs-head">
+      <view class="cs-title">损耗分摊参考</view>
+      <view class="cs-sum">{{lossSummary}}</view>
+      <text class="chev">›</text>
+    </view>
+  </view>
+
+  <!-- 图文教程 —— ⛔ 2026-10-09 暂不上架，用 data.showTutorial 开关遮住（台账 V126）。
+       为什么用开关而不是删掉/注释掉：① 教程数据（product.tutorial）、导出页
+       （pages/products/tutorial-export）、utils/tutorial-export.js 全部保留 ⇒ 已有教程一个字都不会丢；
+       ② **恢复只需把 detail.js 与 edit.js 的 data.showTutorial 改成 true**（两页各一处），
+          不用去翻大段代码。 -->
+  <view wx:if="{{showTutorial}}" class="card tut">
+    <view class="section-title">图文教程<text class="sub">可视化教程卡</text></view>
+    <view wx:if="{{tutorial}}">
+      <view class="tut-title">{{tutorial.title}}</view>
+      <view wx:for="{{tutorial.steps}}" wx:key="index" class="tut-step">
+        <view class="tut-step-head">
+          <text class="tut-num">{{index+1}}</text>
+          <text class="tut-step-title">{{item.title || '未命名步骤'}}</text>
+        </view>
+        <view wx:if="{{item.body}}" class="tut-body">{{item.body}}</view>
+        <view wx:if="{{item.images.length}}" class="tut-imgs">
+          <image wx:for="{{item.images}}" wx:for-item="im" wx:key="path" src="{{im.path}}" mode="aspectFill" class="tut-img" data-i="{{index}}" data-j="{{index}}" bindtap="previewTutImage" />
+        </view>
+        <view wx:if="{{item.matNames.length}}" class="tut-mats">🧷 {{item.matNames.join('、')}}</view>
+        <view wx:for="{{item.images}}" wx:for-item="im" wx:key="path" wx:if="{{im.remark}}" class="tut-remark">· {{im.remark}}</view>
+      </view>
+    </view>
+    <view wx:else class="t-caption">尚未填写图文步骤，可在「编辑」中补充</view>
+    <view class="tut-actions">
+      <view class="btn btn-primary btn-small" bindtap="openTutorialPreview">预览教程</view>
+      <view class="btn btn-primary btn-small" bindtap="openTutorialExport">导出教程</view>
+    </view>
+  </view>
+
+  <!-- 销售记录 -->
+  <view class="card">
+    <view class="section-title">销售记录<text class="sub">累计 ¥{{saleTotal}}</text></view>
+    <view wx:for="{{sales}}" wx:key="index" class="sale-row">
+      <text class="sale-q">×{{item.qty}}</text>
+      <text class="sale-p">¥{{item.price}}</text>
+      <text class="sale-d">{{item.date}}</text>
+      <text class="sale-a">¥{{item.amount}}</text>
+      <text class="sale-del" data-rid="{{item.rid}}" catchtap="delSale">删除</text>
+    </view>
+    <view wx:if="{{!sales.length}}" class="t-caption">暂无销售</view>
+    <view class="btn btn-secondary btn-small btn-block sale-add" bindtap="openSale">+ 记录售出</view>
+  </view>
+
+  <!-- 生产记录 -->
+  <view wx:if="{{productions.length}}" class="card">
+    <view class="section-title">生产记录<text class="sub">增加数量的历史</text></view>
+    <view wx:for="{{productions}}" wx:key="index" class="sale-row">
+      <text class="sale-q">+{{item.qty}}</text>
+      <text class="sale-d">{{item.date}}</text>
+      <text class="sale-del" data-rid="{{item.rid}}" catchtap="undoProduce">退产</text>
+    </view>
+    <view class="t-caption">误增可退产，自动返还所耗物料</view>
+  </view>
+
+  <!-- 排单关联 -->
+  <view wx:if="{{linkedCommissions.length}}" class="card">
+    <view class="section-title">关联排单</view>
+    <view wx:for="{{linkedCommissions}}" wx:key="id" class="list-row" data-id="{{item.id}}" bindtap="goCommissionDetail">
+      <text class="row-title">{{item.name}}</text>
+      <text class="row-sub">余 {{item.remain}} · {{item.status==='done'?'已完成':(item.status==='cancelled'?'已取消':'进行中')}}</text>
+    </view>
+  </view>
+
+  <!-- 操作 -->
+  <view class="ops">
+    <view class="btn btn-secondary btn-medium" bindtap="goEdit">编辑</view>
+    <view class="btn btn-secondary btn-medium" bindtap="copyTemplate">复制为模板</view>
+    <view class="btn btn-secondary btn-medium" bindtap="openStocktake">盘库</view>
+    <view wx:if="{{p.sellableStock>0}}" class="btn btn-secondary btn-medium" bindtap="transferToSample">转样品</view>
+    <view wx:if="{{p.sampleStock>0}}" class="btn btn-secondary btn-medium" bindtap="transferToMerch">转商品</view>
+  </view>
+  <view class="btn btn-danger btn-medium btn-block" bindtap="del">删除成品</view>
+  <view class="safe-bottom"></view>
+</view>
+
+<!-- ⛔ 已删除（2026-10-09）：这里的离屏 canvas（id=tutCanvas）是给详情页自己画教程卡用的。
+     它在 V5x 之后就已经是**没人调用的死代码**（`generateTutorialCard()` 全项目无引用），
+     而教程卡的绘制如今在导出页（pages/products/tutorial-export）里另有一份。
+     所以连同 detail.js 的 generateTutorialCard / _drawAndExport / _drawCard / _afterCard /
+     _saveAlbum / _shareFile / _roundRect / _cut / PALETTE 一起清掉了（详见本次台账 V126）。
+     ⚠️ 注意：**不要**为了"恢复教程功能"把这段加回来 —— 恢复只需要放开上面那张卡片的注释。 -->
+
+<!-- 记录售出面板 -->
+<view wx:if="{{showSale}}" class="mask mask-center" bindtap="closeSale">
+  <view class="sheet sheet-center" catchtap="noop">
+    <view class="sheet-title">记录售出</view>
+    <view class="field">
+      <view class="field-label">数量</view>
+      <ph-input ph-class="field-control input" type="digit" placeholder="1" value="{{saleQty}}" bind:input="onSaleQty" />
+    </view>
+    <view class="field">
+      <view class="sell-head">
+        <view class="field-label">价格</view>
+        <view class="sell-seg">
+          <view class="sell-seg-item {{saleMode==='unit'?'on':''}}" data-m="unit" bindtap="switchSaleMode">单价</view>
+          <view class="sell-seg-item {{saleMode==='total'?'on':''}}" data-m="total" bindtap="switchSaleMode">总价</view>
+        </view>
+      </view>
+      <ph-input ph-class="field-control input" type="digit" placeholder="0.00" value="{{salePrice}}" bind:input="onSalePrice" />
+      <view wx:if="{{salePreview}}" class="sell-preview">{{salePreview}}</view>
+      <view wx:if="{{saleInfo}}" class="sell-preview">{{saleInfo}}</view>
+    </view>
+    <view class="field">
+      <view class="field-label">日期</view>
+      <view class="field-control picker-trigger" bindtap="openSaleDate">{{saleDate}}</view>
+    </view>
+    <!-- 卖给谁（2026-09-27 D76）：可留空；有关联排单时一键填入客户名 -->
+    <view class="field">
+      <view class="field-label">卖给谁<text class="sell-opt">　可留空</text></view>
+      <ph-input ph-class="field-control input" placeholder="如：小美 / 闲鱼买家" value="{{saleClient}}" bind:input="onSaleClient" />
+      <view wx:if="{{linkedCommissions.length}}" class="sell-chips">
+        <view class="sell-chip" wx:for="{{linkedCommissions}}" wx:key="id"
+              data-c="{{item.client}}" bindtap="pickSaleClient">排单 · {{item.name}}</view>
+      </view>
+    </view>
+    <view class="sheet-ops">
+      <view class="btn btn-secondary btn-medium" bindtap="closeSale">取消</view>
+      <view class="btn btn-primary btn-medium" bindtap="confirmSale">确定</view>
+    </view>
+  </view>
+</view>
+
+<!-- 明细二级面板（成本与利润 / 损耗分摊参考） -->
+<view wx:if="{{sheetKey}}" class="mask" bindtap="closeSheet">
+  <view class="sheet detail-sheet" catchtap="noop">
+    <view class="sheet-title">{{sheetKey==='cost'?'成本与利润':'损耗分摊参考'}}</view>
+    <view class="sheet-body">
+      <block wx:if="{{sheetKey==='cost'}}">
+        <view wx:for="{{costRows}}" wx:key="label" class="sheet-row {{item.strong?'strong':''}} {{item.sub?'sub':''}}">
+          <text>{{item.label}}</text><text class="mono">{{item.value}}</text>
+        </view>
+      </block>
+      <block wx:else>
+        <view wx:for="{{lossRows}}" wx:key="label" class="sheet-row {{item.strong?'strong':''}} {{item.sub?'sub':''}}">
+          <text>{{item.label}}</text><text class="mono">{{item.value}}</text>
+        </view>
+        <view class="t-caption sheet-cap">{{lossRef.hasProduced ? ('本月生产 '+lossRef.producedText+' 件 · 仅供参考，不计入成本与售价') : '本月暂无生产记录，无法分摊到单件（仅供参考）'}}</view>
+      </block>
+    </view>
+    <view class="sheet-ops">
+      <view class="btn btn-primary btn-medium btn-block" bindtap="closeSheet">知道了</view>
+    </view>
+  </view>
+</view>
+
+<!-- 盘库面板（待售 / 样品 分别填实测件数） -->
+<view wx:if="{{showStocktake}}" class="mask mask-center" bindtap="closeStocktake">
+  <view class="sheet sheet-center" catchtap="noop">
+    <view class="sheet-title">盘库 · 填实测件数</view>
+    <view class="stocktake-tip">单件成本 ¥{{stkUnitCost}} · 待售与样品分别盘点（不触发扣料）</view>
+    <view class="field">
+      <view class="field-label">待售实际件数（当前 {{p.sellableStock||0}}）</view>
+      <ph-input ph-class="field-control input" type="digit" placeholder="{{p.sellableStock||0}}" value="{{stkSellable}}" bind:input="onStkSellable" />
+    </view>
+    <view class="field">
+      <view class="field-label">样品实际件数（当前 {{p.sampleStock||0}}）</view>
+      <ph-input ph-class="field-control input" type="digit" placeholder="{{p.sampleStock||0}}" value="{{stkSample}}" bind:input="onStkSample" />
+    </view>
+    <view wx:if="{{stkPreview}}" class="stk-preview">{{stkPreview}}</view>
+    <view class="field">
+      <view class="field-label">备注</view>
+      <ph-input ph-class="field-control input" placeholder="选填" value="{{stkRemark}}" bind:input="onStkRemark" />
+    </view>
+    <view class="sheet-ops">
+      <view class="btn btn-secondary btn-medium" bindtap="closeStocktake">取消</view>
+      <view class="btn btn-primary btn-medium" bindtap="confirmStocktake">确定盘库</view>
+    </view>
+  </view>
+
+  <!-- 转类面板（商品 ⇄ 样品）：替换原来的原生 wx.showModal -->
+  <view wx:if="{{showTransfer}}" class="mask mask-center" bindtap="closeTransfer">
+    <view class="sheet sheet-center" catchtap="noop">
+      <view class="sheet-title">{{transferTitle}}</view>
+      <view class="field">
+        <view class="field-label">转移件数（当前可转 {{transferMax}} 件）</view>
+        <ph-input ph-class="field-control input" type="digit" placeholder="1" value="{{transferQty}}" bind:input="onTransferQty" />
+      </view>
+      <view class="sheet-ops">
+        <view class="btn btn-secondary btn-medium" bindtap="closeTransfer">取消</view>
+        <view class="btn btn-primary btn-medium" bindtap="confirmTransfer">确定</view>
+      </view>
+    </view>
+  </view>
+
+  <date-picker-sheet show="{{dpSale}}" title="选择售出日期" value="{{saleDate}}" bind:change="onSaleDate" bind:confirm="closeDate" bind:cancel="closeDate" />
+</view>

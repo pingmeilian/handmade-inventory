@@ -1,0 +1,364 @@
+<!-- pages/products/edit.wxml —— 成品新增 / 编辑 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <!-- 基础信息 -->
+  <view class="card">
+    <view class="field">
+      <view class="field-label">品类</view>
+      <view class="field-control picker-trigger" bindtap="openPcPicker">{{pcList[pcIndex].name}}</view>
+    </view>
+    <view class="field">
+      <view class="field-label">名称<span class="req">*</span></view>
+      <ph-input ph-class="ph-full" value="{{name}}" placeholder="如：雏菊发夹 / 猫窝" bind:input="onName" />
+    </view>
+
+    <!-- 成品照片 -->
+    <view class="field">
+      <view class="field-label">照片</view>
+      <view class="photo-wrap">
+        <view class="photo-item" wx:for="{{photos}}" wx:key="*this">
+          <image class="photo-thumb" src="{{item}}" mode="aspectFill" data-i="{{index}}" bindtap="previewPhoto" />
+          <view class="photo-del" data-i="{{index}}" bindtap="delPhoto">✕</view>
+        </view>
+        <view wx:if="{{photos.length<9}}" class="photo-actions">
+          <view class="photo-btn" bindtap="takePhoto">拍照</view>
+          <view class="photo-btn" bindtap="chooseFromAlbum">从相册选择</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">销售状态</view>
+      <view class="segment">
+        <view class="segment-item {{saleStatus==='unsold'?'active':''}}" data-v="unsold" bindtap="onSaleStatus">未卖出</view>
+        <view class="segment-item {{saleStatus==='sold'?'active':''}}" data-v="sold" bindtap="onSaleStatus">已卖出</view>
+      </view>
+    </view>
+    <view class="field">
+      <view class="field-label">成品类别</view>
+      <view class="segment">
+        <view class="segment-item {{nature==='merchandise'?'active':''}}" data-v="merchandise" bindtap="onNature">商品</view>
+        <view class="segment-item {{nature==='sample'?'active':''}}" data-v="sample" bindtap="onNature">样品</view>
+      </view>
+    </view>
+    <view wx:if="{{nature==='sample'}}" class="t-min">样品（非卖）：出库不计利润，仅扣除物料成本</view>
+  </view>
+
+  <!-- BOM 物料清单 -->
+  <view class="card">
+    <view class="section-title">物料清单 (BOM)</view>
+    <view wx:for="{{bom}}" wx:for-item="b" wx:for-index="bi" wx:key="index" class="bom-row">
+      <view class="bom-head">
+        <view class="bom-mat-wrap {{b.materialName?'':'placeholder'}}" data-i="{{bi}}" bindtap="openMatPicker" hover-class="bom-mat-press" hover-stay-time="100">
+          <block wx:if="{{b.materialName}}">
+            <image wx:if="{{matList[b.matSel] && matList[b.matSel].thumb}}" class="bom-thumb" src="{{matList[b.matSel].thumb}}" mode="aspectFill" />
+            <view wx:else class="bom-thumb bom-thumb-placeholder ph-fill" style="background:{{matList[b.matSel].color}};color:{{matList[b.matSel].ink}}">{{matList[b.matSel].placeholder || '物'}}</view>
+          </block>
+          <view wx:else class="bom-thumb bom-thumb-empty"></view>
+          <view class="bom-mat-text">{{b.materialName || '选择物料'}}</view>
+          <view wx:if="{{!b.materialName}}" class="bom-mat-arrow">▾</view>
+        </view>
+        <text class="bom-del" data-i="{{bi}}" bindtap="delBom">✕</text>
+      </view>
+      <block wx:if="{{b.isFabric}}">
+        <block wx:if="{{b.stockMode === 'batch'}}">
+          <view class="bom-dim">
+            <view class="bom-dim-left">
+              <text class="bom-dim-text">每件用量</text>
+            </view>
+            <ph-input ph-class="field-control input bom-dim-input" type="digit" value="{{b.batchUsage}}" placeholder="用量" data-i="{{bi}}" bind:input="onBomBatchUsage" />
+            <text class="bom-unit-suffix">{{matList[b.matSel].batchUnit || 'kg'}}</text>
+          </view>
+          <view class="t-min">按批估量（刀口布）：做 1 件扣 {{b.batchUsage || 0}} {{matList[b.matSel].batchUnit || 'kg'}}，做 N 件按 N 倍扣</view>
+        </block>
+        <block wx:else>
+          <view class="bom-dim">
+            <view class="bom-dim-left">
+              <text class="bom-dim-text">长</text>
+              <view class="unit-toggle" data-i="{{bi}}" bindtap="onToggleBomLenUnit">
+                <text class="ut {{b.lenUnit==='m'?'on':''}}">m</text>
+                <text class="ut {{b.lenUnit==='cm'?'on':''}}">cm</text>
+              </view>
+            </view>
+            <ph-input ph-class="field-control input bom-dim-input" type="digit" value="{{b.length}}" placeholder="长" data-i="{{bi}}" bind:input="onBomLen" />
+          </view>
+          <view class="bom-dim">
+            <view class="bom-dim-left">
+              <text class="bom-dim-text">宽</text>
+              <view class="unit-toggle" data-i="{{bi}}" bindtap="onToggleBomWidUnit">
+                <text class="ut {{b.widUnit==='m'?'on':''}}">m</text>
+                <text class="ut {{b.widUnit==='cm'?'on':''}}">cm</text>
+              </view>
+            </view>
+            <ph-input ph-class="field-control input bom-dim-input" type="digit" value="{{b.width}}" placeholder="宽" data-i="{{bi}}" bind:input="onBomWid" />
+          </view>
+          <!-- V122：多片摘要 —— 一个物料用两块布时必须看得见（否则像只裁了一片） -->
+          <view wx:if="{{b.pieceText}}" class="bom-piece-row">
+            <text class="bom-piece-text">已排 {{b.pieceText}}</text>
+          </view>
+          <view wx:if="{{b.materialName}}" class="bom-finish-row">
+            <view class="bom-finish-btn {{b.length && b.width?'':'disabled'}}" data-i="{{bi}}" bindtap="goCutLayout">{{(b.pieceText || b.chosenScheme) ? '重剪此面料' : '剪裁'}}</view>
+          </view>
+        </block>
+      </block>
+      <block wx:else>
+        <!-- 未选物料时只留「选择物料」按钮：没有物料，用量无从谈起 -->
+        <view wx:if="{{b.materialName}}" class="bom-usage-row">
+          <ph-input ph-class="field-control input" type="digit" value="{{b.usage}}" placeholder="单件用量（{{b.unit}}）" data-i="{{bi}}" bind:input="onBomUsage" />
+        </view>
+      </block>
+    </view>
+    <view class="btn btn-secondary btn-small btn-block" bindtap="addBom">+ 添加物料</view>
+  </view>
+
+  <!-- 人工 -->
+  <view class="card">
+    <view class="list-row">
+      <text class="row-title">计入人工<text class="row-hint">（即利润）</text></text>
+      <switch checked="{{includeLabor}}" color="{{switchColor}}" bindchange="onIncludeLabor" />
+    </view>
+    <block wx:if="{{includeLabor}}">
+      <view class="segment" style="margin:8rpx 0 20rpx;">
+        <view class="segment-item {{laborMode==='perPiece'?'active':''}}" data-v="perPiece" bindtap="onLaborMode">按件</view>
+        <view class="segment-item {{laborMode==='perHour'?'active':''}}" data-v="perHour" bindtap="onLaborMode">按时</view>
+      </view>
+      <view wx:if="{{laborMode==='perPiece'}}" class="field">
+        <view class="field-label">单件工时费（元）</view>
+        <ph-input ph-class="field-control input" type="digit" value="{{laborFeePerPiece}}" placeholder="0.00" bind:input="onLaborFee" />
+      </view>
+      <view wx:else>
+        <view class="field">
+          <view class="field-label">时薪（元/小时）</view>
+          <ph-input ph-class="field-control input" type="digit" value="{{hourlyRate}}" placeholder="0.00" bind:input="onHourlyRate" />
+        </view>
+        <view class="field">
+          <view class="field-label">耗时（小时）</view>
+          <ph-input ph-class="field-control input" type="digit" value="{{laborHours}}" placeholder="0.0" bind:input="onLaborHours" />
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 定价与利润 -->
+  <view class="card">
+    <view class="section-title">定价与利润<text class="sub">售价 = 物料 + 人工 + 包装 + 运费</text></view>
+    <view class="field">
+      <view class="field-label">包装（元）</view>
+      <ph-input ph-class="field-control input" type="digit" value="{{packaging}}" placeholder="0.00" bind:input="onPackaging" />
+    </view>
+    <view class="field">
+      <view class="field-label">运费（元）</view>
+      <ph-input ph-class="field-control input" type="digit" value="{{shipping}}" placeholder="0.00" bind:input="onShipping" />
+    </view>
+    <view class="cost-box">
+      <view class="cost-line"><text>物料成本</text><text class="mono">¥{{dispMaterial}}</text></view>
+      <view class="cost-line"><text>人工（即利润）</text><text class="mono">¥{{dispProfit}}</text></view>
+      <view class="cost-line"><text>包装</text><text class="mono">¥{{dispPackaging}}</text></view>
+      <view class="cost-line"><text>运费</text><text class="mono">¥{{dispShipping}}</text></view>
+      <view class="cost-line strong"><text>售价</text><text class="mono">¥{{dispPrice}}</text></view>
+      <view class="cost-line"><text>利润率</text><text class="mono">{{dispRate}}</text></view>
+    </view>
+    <view class="t-min cost-hint">利润 = 人工　·　利润率 = 利润 ÷ 售价</view>
+  </view>
+
+  <!-- 图文教程（重写：折叠 / 步骤 / 图片备注 / 物料勾选 / 复制收藏 / 拖拽 / 分页）
+       ⛔ 2026-10-09 暂不上架，用 data.showTutorial 开关遮住（台账 V126）。
+       恢复只需把 edit.js 与 detail.js 的 data.showTutorial 改成 true（两页各一处）。
+       ⚠️ 为什么用开关遮、而不是注释掉：本段内部本来就有若干 HTML 注释，
+          而 WXML 的注释**不能嵌套** —— 在外面再套一层会从内层第一个注释结束符就提前收尾，
+          剩下的代码会"复活"并报错。别改成注释。 -->
+  <view wx:if="{{showTutorial}}" class="card">
+    <view class="section-title tut-head" bindtap="toggleTutCollapsed">
+      <text class="tut-head-title">图文教程</text>
+      <text class="sub">{{tutorial.steps.length ? tutorial.steps.length + ' 步' : '可添加步骤'}}</text>
+      <text class="tut-fold">{{tutCollapsed ? '展开 ▾' : '收起 ▴'}}</text>
+    </view>
+
+    <view wx:if="{{!tutCollapsed}}">
+      <view class="tut-field">
+        <ph-input ph-class="ph-full" size="compact" value="{{tutorial.title}}" placeholder="{{name || '如：雏菊发夹制作教程'}}" bind:input="onTutTitle" />
+      </view>
+
+      <view class="step-list" bindtouchmove="{{dragStep>=0 ? 'onStepDragMove' : ''}}" bindtouchend="{{dragStep>=0 ? 'onStepDragEnd' : ''}}">
+        <view wx:for="{{tutorial.steps}}" wx:for-index="si" wx:key="id" class="step-card {{dragStep===si ? 'dragging' : ''}}" data-i="{{si}}">
+          <!-- 步骤栏：序号 + 行内标题编辑 + 展开/收起 -->
+          <view class="step-bar" bindtap="toggleStepOpen" data-i="{{si}}">
+            <view class="step-drag" catchlongpress="onStepLongPress" data-i="{{si}}">⠿</view>
+            <text class="step-num">{{si+1}}</text>
+            <view class="step-name-wrap" catchtap="noop">
+              <ph-input class="step-name-input" ph-class="ph-full step-name-ph" size="compact" value="{{item.title}}" placeholder="未命名步骤" data-i="{{si}}" bind:input="onStepTitle" />
+            </view>
+            <text class="step-toggle">{{item._open ? '收起 ▴' : '编辑 ▾'}}</text>
+          </view>
+
+          <!-- 展开编辑面板 -->
+          <view wx:if="{{item._open}}" class="step-edit">
+            <view class="tut-field">
+              <ph-input ph-class="ph-full" size="compact" multiline autoHeight value="{{item.body}}" placeholder="描述这一步怎么做…" data-i="{{si}}" bind:input="onStepBody" />
+            </view>
+
+            <!-- 图片：竖向排列，每行左图右说明；点击放大后底部显示备注 -->
+            <view class="step-imgs" bindtouchmove="{{dragImg.step===si ? 'onImgDragMove' : ''}}" bindtouchend="{{dragImg.step===si ? 'onImgDragEnd' : ''}}">
+              <view wx:for="{{item.images}}" wx:for-item="im" wx:key="path" class="step-img-row {{dragImg.step===si && dragImg.idx===index ? 'dragging' : ''}}" data-i="{{si}}">
+                <view class="step-img-thumb-wrap" catchlongpress="onImgLongPress" data-i="{{si}}" data-j="{{index}}">
+                  <image src="{{im.path}}" mode="aspectFill" class="step-img-thumb" data-i="{{si}}" data-j="{{index}}" bindtap="previewStepImage" />
+                  <view class="step-img-del" catchtap="delStepImage" data-i="{{si}}" data-j="{{index}}">✕</view>
+                  <view class="step-img-drag" data-i="{{si}}" data-j="{{index}}">⠿</view>
+                </view>
+                <ph-input class="step-img-remark" ph-class="ph-full" multiline value="{{im.remark}}" placeholder="图片说明（可选）" data-i="{{si}}" data-j="{{index}}" bind:input="onImgRemark" />
+              </view>
+              <view class="step-img-add" catchtap="chooseStepImage" data-i="{{si}}">+ 图片</view>
+            </view>
+
+            <!-- 物料勾选（仅本成品 BOM） -->
+            <view wx:if="{{tutBomMats.length}}" class="step-mats">
+              <view class="tut-mats-label">绑定物料（仅本成品 BOM）</view>
+              <view class="mat-chips">
+                <view wx:for="{{tutBomMats}}" wx:for-index="chi" wx:key="id"
+                  class="mat-chip {{tutorial.steps[si]._matSel[chi] ? 'on' : ''}}"
+                  catchtap="toggleStepMat" data-i="{{si}}" data-mid="{{item.id}}">{{item.name}}</view>
+              </view>
+            </view>
+
+            <!-- 操作按钮 -->
+            <view class="step-ops">
+              <view class="step-op" catchtap="copyStep" data-i="{{si}}">复制工序</view>
+              <view class="step-op" catchtap="collectStep" data-i="{{si}}">收藏工序</view>
+              <view class="step-op {{item.pageBreak ? 'on' : ''}}" catchtap="togglePageBreak" data-i="{{si}}">手动分页</view>
+              <view class="step-op danger" catchtap="delStep" data-i="{{si}}">删除</view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="tut-add-row">
+        <view class="btn btn-secondary btn-small" bindtap="addStep">+ 添加步骤</view>
+        <view class="btn btn-secondary btn-small" bindtap="insertCollected">插入收藏工序</view>
+      </view>
+      <view class="tut-preview-row">
+        <view class="btn btn-primary btn-small" bindtap="openTutorialPreview">预览教程</view>
+        <view class="btn btn-primary btn-small" bindtap="openTutorialExport">导出教程</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 排单关联 -->
+  <view wx:if="{{linkedCommissions.length}}" class="card">
+    <view class="section-title">关联排单</view>
+    <view wx:for="{{linkedCommissions}}" wx:key="id" class="list-row">
+      <text class="row-title">{{item.name}}</text>
+      <text class="row-sub">余 {{item.remain}} · {{item.status==='done'?'已完成':(item.status==='cancelled'?'已取消':'进行中')}}</text>
+    </view>
+    <view class="t-min">在「排单」页可新建并关联本成品</view>
+  </view>
+  <view wx:else class="card">
+    <view class="btn btn-secondary btn-small btn-block" bindtap="goCommission">+ 新建排单并关联</view>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="btn btn-primary btn-large btn-block" bindtap="save">保存成品</view>
+  </view>
+  <view class="safe-bottom"></view>
+
+  <!-- 自定义全屏图片预览：底部显示图片说明（小红书式） -->
+  <view wx:if="{{imgPreview.show}}" class="img-preview-mask" bindtap="closeImgPreview">
+    <view class="img-preview-close" catchtap="closeImgPreview">✕</view>
+    <swiper class="img-preview-swiper" current="{{imgPreview.idx}}" bindchange="onPreviewChange" catchtap="noop">
+      <swiper-item wx:for="{{imgPreview.urls}}" wx:key="*this" class="img-preview-item">
+        <image src="{{item}}" mode="aspectFit" class="img-preview-img" />
+      </swiper-item>
+    </swiper>
+    <view class="img-preview-caption-wrap" catchtap="noop">
+      <text class="img-preview-caption">{{tutorial.steps[imgPreview.step].images[imgPreview.idx].remark || '暂无说明'}}</text>
+      <text class="img-preview-counter">{{imgPreview.idx + 1}} / {{imgPreview.urls.length}}</text>
+    </view>
+  </view>
+
+  <!-- BOM 物料选择器：搜索 + 按物料分类分块 -->
+  <view wx:if="{{showMatPicker}}" class="mask" bindtap="closeMatPicker">
+    <view class="sheet mat-picker" catchtap="noop" bindtouchend="onMatPreviewEnd" bindtouchcancel="onMatPreviewEnd">
+      <view class="sheet-title">选择物料<text class="mat-tip">长按看详情 · 面料点一下可直接排裁剪</text></view>
+
+      <!-- 长按预览卡：松手即关。pointer-events:none 确保它绝不抢手势、不打断选择
+           （弹层上也挂了 touchend 兜底，万一该属性在某个渲染器下失效，也照样能收起） -->
+      <view wx:if="{{matPreview}}" class="mat-preview">
+        <view class="mp-head">
+          <text class="mp-name">{{matPreview.name}}</text>
+          <text class="mp-cat">{{matPreview.categoryName}}</text>
+          <text wx:if="{{matPreview.low}}" class="mp-low">低库存</text>
+        </view>
+
+        <view wx:if="{{matPreview.attrs.length}}" class="mp-attrs">
+          <text wx:for="{{matPreview.attrs}}" wx:key="key" class="mp-attr">{{item.label}}{{item.label ? ' ' : ''}}{{item.value}}</text>
+          <text wx:if="{{matPreview.attrsHidden}}" class="mp-attr mp-attr-more">还有 {{matPreview.attrsHidden}} 项</text>
+        </view>
+
+        <view class="mp-kv">
+          <view wx:if="{{matPreview.sizeLine}}" class="mp-row">
+            <text class="mp-k">尺寸</text><text class="mp-v">{{matPreview.sizeLine}}</text>
+          </view>
+          <view class="mp-row">
+            <text class="mp-k">可用</text><text class="mp-v mp-v-strong">{{matPreview.stockText}}</text>
+          </view>
+          <view wx:if="{{matPreview.stockDetail}}" class="mp-row">
+            <text class="mp-k">构成</text><text class="mp-v">{{matPreview.stockDetail}}</text>
+          </view>
+          <view class="mp-row">
+            <text class="mp-k">单价</text><text class="mp-v">{{matPreview.priceSeg}}</text>
+          </view>
+        </view>
+
+        <!-- 面料：布片清单。松手即关、列表不能滚动 → 最多 6 片 + 汇总 -->
+        <block wx:if="{{matPreview.pieces.length}}">
+          <view class="mp-sub">
+            布片清单
+            <text wx:if="{{matPreview.piecesHidden}}" class="mp-sub-more">仅列最大的 6 片，另有 {{matPreview.piecesHidden}} 片</text>
+          </view>
+          <view class="mp-pieces">
+            <view wx:for="{{matPreview.pieces}}" wx:key="key" class="mp-piece {{item.isOffcut?'off':'wh'}}">
+              <text class="mp-piece-size">{{item.length}}×{{item.width}}cm</text>
+              <text class="mp-piece-tag">{{item.tag}}</text>
+              <text class="mp-piece-area">{{item.areaM2}}m²</text>
+            </view>
+          </view>
+          <view class="mp-sum">共 {{matPreview.piecesTotal}} 片 · 整布 {{matPreview.wholeCount}} / 碎料 {{matPreview.offcutCount}}</view>
+        </block>
+        <view wx:elif="{{matPreview.isFabric && !matPreview.isBatch}}" class="mp-empty">当前没有在库布片</view>
+      </view>
+      <view class="mat-search-wrap">
+        <ph-input ph-class="mat-search" value="{{matSearch}}" placeholder="搜索关键词 / 物料名称" bind:input="onMatSearch" />
+      </view>
+      <scroll-view scroll-x class="mat-filter-bar">
+        <view class="mat-filter-chip {{matFilterMcId==='all'?'active':''}}" data-id="all" bindtap="onMatFilterMc">全部</view>
+        <view wx:for="{{mcList}}" wx:key="id" class="mat-filter-chip {{matFilterMcId===item.id?'active':''}}" data-id="{{item.id}}" bindtap="onMatFilterMc">{{item.name}}</view>
+      </scroll-view>
+      <scroll-view scroll-y class="mat-picker-body">
+        <block wx:if="{{matPickerGroups.length}}">
+          <view wx:for="{{matPickerGroups}}" wx:key="mcId" class="mat-group">
+            <view class="mat-group-title">{{item.mcName}}</view>
+            <view class="mat-rows">
+              <view wx:for="{{item.items}}" wx:for-item="m" wx:key="id" class="mat-row" data-id="{{m.id}}"
+                    bindtap="selectMat"
+                    bindlongpress="onMatPreview" bindtouchend="onMatPreviewEnd" bindtouchcancel="onMatPreviewEnd">
+                <image wx:if="{{m.thumb}}" class="mat-row-thumb" src="{{m.thumb}}" mode="aspectFill" />
+                <view wx:else class="mat-row-thumb ph-fill" style="background:{{m.color}};color:{{m.ink}}">{{m.placeholder}}</view>
+                <view class="mat-row-body">
+                  <view class="mat-row-name">{{m.name}}</view>
+                  <view class="mat-row-spec">{{m.stockMode === 'batch' ? '刀口布 · ' : ''}}余 {{m.stockText}} · {{m.priceSeg}}</view>
+                </view>
+                <view wx:if="{{m.low}}" class="mat-row-tag">低库存</view>
+              </view>
+            </view>
+          </view>
+        </block>
+        <view wx:else class="mat-empty">未找到匹配的物料</view>
+      </scroll-view>
+      <view class="sheet-ops">
+        <view class="btn btn-secondary btn-medium" bindtap="closeMatPicker">取消</view>
+      </view>
+    </view>
+  </view>
+
+  <picker-sheet show="{{picker.show}}" title="{{picker.title}}" options="{{picker.options}}" range-key="{{picker.rangeKey}}" value="{{picker.value}}" bind:cancel="closePicker" bind:confirm="onPickerConfirm" />
+</view>

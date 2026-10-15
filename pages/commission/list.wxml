@@ -1,0 +1,56 @@
+<!-- pages/commission/list.wxml —— 排单列表 -->
+<!-- 点空白处收起左滑展开项（卡片里的点击由卡片自己处理，冒泡上来只是收尾） -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap" bindtap="onBlankTap">
+  <view class="space-bar"><text class="space-name">{{spaceName}}</text></view>
+
+  <view class="seg-wrap">
+    <view class="seg">
+      <view class="seg-item {{filter==='active'?'active':''}}" data-f="active" bindtap="setFilter">进行中</view>
+      <view class="seg-item {{filter==='done'?'active':''}}" data-f="done" bindtap="setFilter">已完成</view>
+      <view class="seg-item {{filter==='cancelled'?'active':''}}" data-f="cancelled" bindtap="setFilter">已取消</view>
+    </view>
+  </view>
+
+  <view wx:if="{{list.length}}">
+    <!-- 左滑操作：通用组件，操作项走配置（见 list-actions.js）。
+         组件不知道"排单"是什么，只抛 { key } 给页面处理。
+         direction 交给组件自判（auto → RTL 环境自动右滑展开）。 -->
+    <view class="swipe-row" wx:for="{{list}}" wx:key="id">
+      <swipe-cell
+        data-id="{{item.id}}"
+        actions="{{item.ended ? cmActionsEnded : cmActionsActive}}"
+        direction="{{swipeDir}}"
+        bind:action="onCardAction"
+      >
+        <view class="cm-card" data-id="{{item.id}}" bindtap="goDetail">
+          <view class="cm-top">
+            <view class="cm-name">{{item.productName}} · {{item.client}}</view>
+            <view class="tag {{item.ddlStatus==='over'?'badge-danger':(item.ddlStatus==='warn'?'badge-warning':(item.ddlStatus==='done'?'badge-ok':'badge-normal'))}}">{{item.ddlStatus==='over'?'已超期':(item.ddlStatus==='warn'?'临近截止':(item.ddlStatus==='done'?'已完成':(item.ddlStatus==='cancelled'?'已取消':'正常')))}}</view>
+          </view>
+          <view class="cm-sub">数量 {{item.qty}} · 已交 {{item.deliveredQty}} · 余 {{item.remain}}</view>
+          <view class="cm-foot">
+            <text class="cm-deadline">截止 {{item.deadline}}</text>
+            <text class="cm-days" wx:if="{{item.ddlStatus==='over'}}">已超 {{item.daysLeft}} 天</text>
+            <text class="cm-days" wx:elif="{{item.daysLeft>=0}}">剩 {{item.daysLeft}} 天</text>
+          </view>
+        </view>
+      </swipe-cell>
+    </view>
+  </view>
+
+  <empty wx:else title="还没有排单" desc="记录客户定制、代工与交付期限，到期自动提醒" btnText="+ 新建排单" bind:action="goEdit"></empty>
+
+  <view class="fab" bindtap="goEdit">+</view>
+
+  <!-- V149：快速交付弹窗（与详情页「交付出库」共用同一个组件、同一套流程） -->
+  <deliver-sheet
+    show="{{showDeliver}}"
+    remain="{{deliverRemain}}"
+    stock="{{deliverStock}}"
+    needCut="{{deliverNeedCut}}"
+    bind:close="closeDeliver"
+    bind:submit="onDeliverSubmit"
+  />
+</view>

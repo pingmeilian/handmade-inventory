@@ -1,0 +1,207 @@
+/* pages/cut-editor/cut-editor.wxss —— 裁剪界面（四区带）· 2026-09-30 V83–V86 / V90 */
+.editor { display: flex; flex-direction: column; height: 100vh; background: var(--color-surface); }
+
+/* ===== ① 布片选择区 =====
+   ⚠️ 语义分工（V84 真机反馈）：**边框/光晕只表达"选中"**；
+      「放得下 / 放不下」改用卡内文字（✓ / ✕）+ 底色。
+      原因：原来选中=棕色边框、放得下=绿边框、放不下=红边框，三套颜色挤在一个边框上，
+      用户原话「红绿我根本不知道红的是选中的还是绿的是选中的」。 */
+/* V111：换布区 = **左边物料照片 + 右边布片卡**（同一行）。
+   ⚠️ 它与 ② 区的左右滑是**两层**：这里管"同一物料内换哪块布"，②区管"换哪个物料"。 */
+.strip-row {
+  flex: none; display: flex; align-items: center; gap: 16rpx;
+  padding: 14rpx 20rpx;
+  background: var(--color-surface-2); border-bottom: 1rpx solid var(--color-divider);
+}
+.strip-photo {
+  flex: none; width: 96rpx; height: 96rpx; border-radius: var(--radius-inner);
+  overflow: hidden; background: var(--color-surface); border: 1rpx solid var(--color-divider);
+}
+.strip-photo-img { width: 100%; height: 100%; display: block; }
+/* 无图占位（V112）：底色/墨色由内联 style 注入（= 物料分类色），
+   这里只管排版 —— 字号比列表里那份小，因为容器只有 96rpx 见方。 */
+.strip-photo-ph {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 38rpx; font-weight: 600; line-height: 1;
+}
+.strip { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; }
+.strip-empty { flex: 1; min-width: 0; padding: 28rpx 0; }
+.strip-inner { display: inline-flex; align-items: flex-start; gap: 16rpx; }
+.strip-card {
+  flex: none; width: 190rpx; padding: 12rpx; border-radius: var(--radius-inner);
+  background: var(--color-surface); border: 2rpx solid var(--color-divider);
+  display: flex; flex-direction: column; align-items: center; gap: 8rpx;
+}
+.strip-card.fit { background: var(--color-surface); }
+.strip-card.no { background: #FEFAF9; }
+/* V119：选中改「**荧光描边**」—— 细描边 + 一圈柔光。
+   用户 2026-10-06：「为啥这四边有棕色的框 不好看」⇒ 拍板：荧光描边、颜色用樱花粉。
+   ⚠️ 原做法是"实色一圈"（border 主色 + `0 0 0 4rpx` 主色）—— 粉帽主题下主色是陶土橘，
+      看起来就是一圈棕色方框；现在色走 `--color-ring`（粉帽=樱花粉），并补一层模糊柔光，
+      细线给边界、光晕给"亮"的感觉。「选中」全站仍只用这一种语言（同 .piece-hit.on）。 */
+.strip-card.on {
+  border-color: var(--color-ring);
+  box-shadow: 0 0 0 3rpx var(--color-ring), 0 0 18rpx 2rpx var(--color-ring);
+}
+/* V111：布块改**中性灰白**（用户选了 c）—— 原来的暖米黄自带色温，
+   换成粉蓝 / 砖红主题时跟背景打架；灰白不偏冷暖，配哪套主题都成立。
+   ⚠️ 红 / 绿**不动**：那是语义色（红=放不下、绿=放得下），按铁律 1 永不跟主题变。 */
+.strip-shape { position: relative; flex: none; background: #EFEFEC; border: 1rpx solid #D8D6D0; border-radius: 6rpx; overflow: hidden; }
+.strip-hole { position: absolute; background: #FBFBF9; border: 1rpx dashed #C9C7C1; }
+.strip-meta { display: flex; align-items: baseline; gap: 8rpx; }
+.strip-size { font-size: 22rpx; color: var(--color-text-1); }
+.strip-kind { font-size: 20rpx; color: var(--color-text-3); }
+.strip-fit { font-size: 20rpx; }
+.strip-fit.ok { color: var(--color-success); }
+.strip-fit.bad { color: var(--color-danger); }
+/* V113c：还没填尺寸的"不判断"态 —— 中性灰（三级文字），不是状态色：
+   它说的是"现在还没到判断的时候"，不是"有问题"。 */
+.strip-fit.idle { color: var(--color-text-3); }
+
+/* ===== ② 剪裁区 =====
+   ⚠️ 三条铁律（都是踩出来的）：
+     1. **这个区域一个字都不放**（V86）——裁片随时会拖到任何位置，文字必被压住；
+        所以提示只出现在「底部状态行」和布片卡上。
+     2. 绿/红块是 .cloth 的**兄弟节点**（都放在 .canvas 里）——塞进 .cloth 会被它的
+        overflow:hidden 裁掉，拖出布外那截就看不见了（V84）。
+     3. .cloth 的边框用 box-shadow 画（不用 border）：border 会吃掉宽高，绿/红块就对不齐布了。
+   .canvas 的高度由 JS 按窗口算（board.wrapW/wrapH），.board-wrap 负责把它**居中**。 */
+/* V111：②区从"纵向滚动的堆叠"改成"swiper 一屏一个物料"。
+   ⚠️ swiper **必须有确定高度**：这里靠 flex:1（父级 .editor 是 height:100vh 的竖 flex）撑。
+   ⚠️ 别写死高度 —— 写死换个机型就错（V86 吃过这个亏）。 */
+.stage { flex: 1; height: 100%; }
+.board-wrap {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%; box-sizing: border-box; padding: 12rpx 0;
+}
+.canvas { position: relative; flex: none; }
+.cloth {
+  position: absolute;
+  background: #EFEFEC; border-radius: 8rpx; overflow: hidden;   /* V111：中性灰白（理由见 .strip-shape） */
+  box-shadow: 0 0 0 2rpx #D8D6D0;
+}
+.cloth-hole { position: absolute; background: #FBFBF9; border: 1rpx dashed #C9C7C1; }
+/* 放得下：实心绿；放不下：**红色虚线**（布外那截就靠这个看得出来「这块布放不下」） */
+.cut-green { position: absolute; background: rgba(151, 196, 89, .55); border: 2rpx solid #3B6D11; }
+.cut-red { position: absolute; background: rgba(226, 75, 74, .28); border: 2rpx dashed #A32D2D; }
+.grab { position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 5; }
+
+/* ===== ③ 尺寸输入区（单位自己选，默认厘米）=====
+   ⚠️ 输入框用**和搜索框同一套**「软填充」样式（用户 2026-09-30 指定）：
+      白底栏 + 浅灰填充框 + 灰占位字，而不是自画的暖色底+描边 —— 全站输入框长一样才好认。
+      栏底用 --color-surface（白），输入框用 --color-surface-2（浅灰）⇒ 一眼看出"这里能填"。 */
+.size-bar {
+  flex: none; display: flex; flex-direction: column; gap: 14rpx;
+  padding: 16rpx 24rpx; background: var(--color-surface);
+  border-top: 1rpx solid var(--color-divider);
+}
+.size-fields { display: flex; align-items: flex-end; gap: 20rpx; }
+.size-field { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6rpx; }
+.size-label { font-size: 22rpx; color: var(--color-text-2); }
+.size-input {
+  width: 100%; height: 80rpx; line-height: 80rpx; padding: 0 20rpx; box-sizing: border-box;
+  background: var(--color-surface-2);
+  border: none;
+  border-radius: var(--radius-inner);
+  font-size: 30rpx; text-align: center; color: var(--color-text-1);
+}
+/* 逐件模式尺寸锁定（由成品设定）：压暗一点，别让人以为能改 */
+.size-input[disabled] { color: var(--color-text-2); opacity: 1; }
+/* 单位开关在长宽**后边**（同一行的右侧下方）+ 转 90° */
+.size-ops { display: flex; align-items: center; justify-content: space-between; }
+.unit-seg { flex: none; width: 220rpx; }
+.rot-btn {
+  flex: none; height: 64rpx; line-height: 64rpx; padding: 0 24rpx;
+  border: 1rpx solid var(--color-divider); border-radius: var(--radius-inner);
+  font-size: 24rpx; color: var(--color-text-2); background: var(--color-surface-2);
+}
+.rot-btn.on { border-color: var(--color-primary); color: var(--color-primary-deep); font-weight: 500; }
+.size-sum { flex: none; padding: 10rpx 24rpx 0; font-size: 22rpx; }
+.size-sum .ok { color: var(--color-success); }
+.size-sum .no { color: var(--color-danger); }
+
+/* ===== ④ 确认与取消 ===== */
+.ops { flex: none; display: flex; gap: 20rpx; padding: 16rpx 24rpx; background: var(--color-surface); }
+.ops .btn { flex: 1; }
+.ops .btn.disabled { opacity: .45; }
+
+.empty-tip { padding: 60rpx 24rpx; text-align: center; font-size: 26rpx; color: var(--color-text-3); }
+
+/* ==================== 排片模式（数量 > 1 的裁剪，V90）====================
+   用户三句原话定的：「可以自定义大小和片数」「不是每一片都是一样的大小，可以每一片自定义长宽」
+   「不同的裁片也可以选不同的布片放」⇒ 一屏把整批排完，每片各自定。 */
+
+/* ② 剪裁区：用到的那几块布**纵向堆叠**（布多了也不会横着挤成一团）。
+   ⚠️ 每块布仍然各自留一圈 pad —— 裁片照样能拖出布外、布外那截画红色虚线。 */
+/* V111：一屏里的布块**纵向堆叠**（用户选的 —— 布是横着的长条，上下堆才最省空间）
+   + 整屏居中，让"布块占满剪裁区"真的成立。
+   ⚠️ gap 要和 js 里算高度用的 `BOARD_GAP`(22) 对得上，不然最下面那块会被挤出可视区。
+   ⚠️ 底部多留 24rpx：swiper 的指示点会占那儿。 */
+.board-stack {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100%; box-sizing: border-box;
+  gap: 22rpx; padding: 12rpx 0 24rpx;
+}
+.board-cell { flex: none; display: flex; flex-direction: column; align-items: center; }
+/* 布片标识（V111）：形如 `布片 1 · 500×150 · 整布`。
+   原来只有尺寸 —— 布片**在数据里没有名字**，序号是"仅供这一屏看"的（不落盘、不随拖动变）。 */
+.board-tag { flex: none; margin-top: 8rpx; font-size: 20rpx; color: var(--color-text-2); }
+
+/* 每片自己的抓手：透明层（真正的图形在它下面 —— 绿块 / 红虚线块，可能超出片的范围）。
+   「选中」用一圈光晕表达，和 ① 区选中态是同一套语言（全站只用一个"选中"的视觉）。 */
+.piece-hit { position: absolute; z-index: 6; border-radius: 4rpx; }
+/* V119：与 .strip-card.on 同一套语言 —— 荧光描边（细圈 + 柔光），色走 --color-ring。 */
+.piece-hit.on { box-shadow: 0 0 0 3rpx var(--color-ring), 0 0 18rpx 2rpx var(--color-ring); }
+
+/* ③ 片列表：一行一片 —— 「用哪块布 + 长 + 宽」都能改。
+   ⚠️ 这里是**画布之外**，所以文字/输入都放这儿（画布区一个字不许放 —— V86 铁律）。 */
+.part-bar {
+  flex: none; display: flex; flex-direction: column;
+  background: var(--color-surface); border-top: 1rpx solid var(--color-divider);
+}
+.part-head {
+  flex: none; display: flex; align-items: center; justify-content: space-between;
+  gap: 10rpx; padding: 14rpx 24rpx 10rpx;
+}
+.part-title { flex: 1; min-width: 0; font-size: 24rpx; color: var(--color-text-1); font-weight: 500; }
+/* V111：`做 2 件 · 蓝色粗布格纹111 1/2 · 裁 2 片` —— 中间的 `1/2` 是"第几个物料 / 共几个" */
+.part-mat-no { color: var(--color-text-2); }
+.part-ops { flex: none; display: flex; align-items: center; gap: 10rpx; }
+/* 单位开关在这一行里要窄一些（全局那套 segment 是给整行用的） */
+.part-ops .unit-seg { flex: none; width: 132rpx; }
+.part-mini {
+  padding: 6rpx 18rpx; border: 1rpx solid var(--color-divider); border-radius: var(--radius-inner);
+  font-size: 22rpx; color: var(--color-text-2); background: var(--color-surface-2);
+}
+.part-list { flex: 1; max-height: 32vh; }
+.part-row {
+  display: flex; align-items: center; gap: 10rpx;
+  padding: 8rpx 24rpx; border-bottom: 1rpx solid var(--color-divider);
+}
+.part-row.on { background: var(--color-primary-soft); }
+.part-row.bad { background: #FEFAF9; }
+.part-no { flex: none; width: 44rpx; font-size: 22rpx; color: var(--color-text-2); }
+.part-row.on .part-no { color: var(--color-primary-deep); font-weight: 500; }
+.part-board {
+  flex: none; width: 110rpx; font-size: 22rpx; color: var(--color-text-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.part-row.bad .part-board { color: var(--color-danger); }
+.part-field { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6rpx; }
+.part-unit { flex: none; font-size: 22rpx; color: var(--color-text-3); }
+.part-input {
+  flex: 1; min-width: 0; height: 62rpx; line-height: 62rpx; padding: 0 12rpx; box-sizing: border-box;
+  background: var(--color-surface-2); border: none; border-radius: var(--radius-inner);
+  font-size: 26rpx; text-align: center; color: var(--color-text-1);
+}
+.part-cm { flex: none; font-size: 20rpx; color: var(--color-text-3); }
+
+/* 每片自己转 90°（V93）：`.on` = 已经转过来放着。
+   布有织向，摆哪个方向是用户的决定 —— 系统只在用户没表态时才自动兜。 */
+.part-rot {
+  flex: none; padding: 7rpx 14rpx; border: 1rpx solid var(--color-divider);
+  border-radius: var(--radius-inner); font-size: 20rpx; line-height: 1;
+  color: var(--color-text-2); background: var(--color-surface-2);
+}
+.part-rot.on { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-primary-on); }

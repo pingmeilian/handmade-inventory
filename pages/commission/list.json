@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "排单交付",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "empty": "/components/empty/empty",
+    "swipe-cell": "/components/swipe-cell/swipe-cell",
+    "deliver-sheet": "/components/deliver-sheet/deliver-sheet"
+  }
+}

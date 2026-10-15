@@ -1,0 +1,354 @@
+<!-- pages/dashboard/dashboard.wxml -->
+<!-- 弹层打开时锁住底层页面滚动（两道保险）：
+     ① page-meta 的 page-style 把页面根节点设为 overflow:hidden；
+     ② .page-wrap 加 page-locked 类，自身高度锁成视口高度 + 裁掉溢出。
+     原因是 scroll-view 在内容不足以滚动时不会消费触摸事件，事件会冒泡到底层页面 —— 
+     只靠其中一道在某些基础库上会被穿透。 -->
+<!-- V97：page-style 同时干两件事 —— ① 主题的 CSS 变量（themeStyle，13 个一起给）
+     ② 弹层时锁页面滚动。两者用空格拼接，themeStyle 自带结尾分号。 -->
+<page-meta page-style="{{themeStyle}} {{(statVisible || dtVisible || showMonthPicker) ? 'overflow: hidden;' : ''}}"></page-meta>
+<view class="page-wrap pin-page {{(statVisible || dtVisible || showMonthPicker) ? 'page-locked' : ''}}">
+
+  <!-- V116：整块固定（灰框内）—— 顶部单行栏：仅手作空间切换（页面名称由原生导航栏展示） -->
+  <view class="pin-band" id="pinBand">
+  <view class="topbar">
+    <scroll-view scroll-x class="space-scroll" enhanced show-scrollbar="{{false}}">
+      <view class="space-pills">
+        <view wx:for="{{spaces}}" wx:key="id"
+              class="space-pill {{currentCategoryId === item.id ? 'on' : ''}}"
+              data-id="{{item.id}}" bindtap="switchCategory">
+          {{item.name}}
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+  </view>
+  <view class="pin-band-ph" style="height:{{bandH}}px;"></view>
+
+  <!-- V117：奶黄圆角面板 —— 包住分界线以下的全部内容（顶角 44rpx、左右贴边）；
+       min-height 用带高清出来：内容少时也铺到屏幕底，面板下面不露页面底色。 -->
+  <view class="content-panel" style="min-height:calc(100vh - {{bandH}}px);">
+
+  <!-- 数据体检提示条：仅当启动体检发现账目不一致时出现 -->
+  <view class="ck-alert" wx:if="{{checkupAlert && !checkupDismissed}}">
+    <text class="ck-alert-text" bindtap="goCheckup">⚠️ 数据体检发现 {{checkupAlert.mismatchCount}} 处账目不一致，点击查看并修复</text>
+    <text class="ck-alert-close" catchtap="dismissCheckup">✕</text>
+  </view>
+
+  <!-- 图片空间提示条（Day 4 任务 4.5）：仅当用量超 80% 时出现 -->
+  <view class="ck-alert" wx:if="{{imgAlert && !imgAlertDismissed}}">
+    <text class="ck-alert-text" bindtap="goBackup">📦 文件空间已用 {{imgAlert.usedText}} MB（图片 {{imgAlert.count}} 张），点击去备份或清理</text>
+    <text class="ck-alert-close" catchtap="dismissImgAlert">✕</text>
+  </view>
+
+  <!-- 资产三大板块（数据卡片） -->
+  <view class="board" wx:if="{{board}}">
+    <view class="board-sec sec-{{secIdx}}" wx:for="{{board}}" wx:for-item="sec" wx:for-index="secIdx" wx:key="title">
+      <view class="board-sec-title">{{sec.title}}</view>
+      <view class="board-row {{sec.cards.length === 3 ? 'row3' : 'row2'}}">
+        <view class="bcard {{item.warn ? 'warn' : ''}}"
+              wx:for="{{sec.cards}}" wx:for-item="item" wx:key="key"
+              catchtap="openStat" data-key="{{item.key}}">
+          <view class="bcard-title">{{item.title}}</view>
+          <view class="bcard-val text-mono">{{item.value}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 低库存提醒 -->
+  <view class="section" wx:if="{{lowStock.length}}">
+    <view class="section-title">低库存提醒 <text class="sub">{{lowStock.length}} 项</text></view>
+    <view class="card">
+      <view class="list-row" wx:for="{{lowStock}}" wx:key="id" data-id="{{item.id}}" bindtap="goMaterialDetail">
+        <view class="row-main">
+          <view class="row-title">{{item.name}}</view>
+          <view class="row-sub">当前 {{item.stock}}{{item.unit}} · 阈值 {{item.threshold}}{{item.unit}}</view>
+        </view>
+        <view class="tag badge-warning">低库存</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 排单：堆叠卡片（置顶一条完整可见，后面露边暗示还有更多）。整卡点击 → 排单列表页
+       空状态时不叠层。标题「排单」样式与「原料资产」一致；卡片高度与「灵感记录」统一固定。 -->
+  <view class="section">
+    <view class="board-sec-title cm-head">
+      <text>排单</text>
+      <text wx:if="{{cmTotal}}" class="cm-head-more" catchtap="goCommissionList">全部 {{cmTotal}} 单 ›</text>
+    </view>
+
+    <view class="cm-stack-wrap" bindtap="goCommissionList">
+      <view wx:if="{{!cmTotal}}" class="cm-empty">
+        <text class="cm-empty-t">还没有排单</text>
+        <text class="cm-empty-s">可在成品页新建排单并关联</text>
+      </view>
+
+      <block wx:else>
+        <!-- 装饰层：比顶卡窄一点、往下错开，只露一条边（层数由 calc.commissionStackLayers 决定） -->
+        <view wx:if="{{cmStack >= 2}}" class="cm-layer cm-layer-2"></view>
+        <view wx:if="{{cmStack >= 1}}" class="cm-layer cm-layer-1"></view>
+        <!-- 顶卡：完整可见，承载全部信息 -->
+        <view class="cm-top">
+          <view class="cm-top-main">
+            <view class="cm-top-name">{{cmTop.productName || '未关联成品'}}</view>
+            <view class="cm-top-sub">{{cmTop.client || '客户'}} · 余 {{cmTop.remain}} 件</view>
+          </view>
+          <!-- 超期用 danger、3 天内含用 warning、其余用 .tag 基类的中性样式
+               （注意：不能写 badge-normal —— 它只在 commission/list 页面作用域里定义，本页没有） -->
+          <view class="tag cm-top-tag {{cmTop.urgent ? 'badge-danger' : (cmTop.ddlStatus === 'warn' ? 'badge-warning' : '')}}">
+            {{cmTop.ddlText}}
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 区域隔离：上方资产数据区 与 下方快捷入口区 -->
+  <view class="soft-sep"></view>
+
+  <!-- 灵感 / 想做 快捷 -->
+  <view class="section quick-links">
+    <view class="link-card" bindtap="goInspirations">
+      <image class="link-ico" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNDOEE5OEUiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik05IDE4aDYiLz48cGF0aCBkPSJNMTAgMjFoNCIvPjxwYXRoIGQ9Ik0xMiAzYTYgNiAwIDAgMC00IDEwLjVjLjcuNyAxIDEuNCAxIDIuNWg2YzAtMS4xLjMtMS44IDEtMi41QTYgNiAwIDAgMCAxMiAzeiIvPjwvc3ZnPg=="/>
+      <view class="link-num">{{inspirationCount}}</view>
+      <view class="link-label">灵感记录</view>
+      <view wx:if="{{inspirationCount === 0}}" class="link-zero">记录一下灵感吧</view>
+    </view>
+    <view class="link-card" bindtap="goWants">
+      <image class="link-ico" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNDOEE5OEUiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik04IDZoMTIiLz48cGF0aCBkPSJNOCAxMmgxMiIvPjxwYXRoIGQ9Ik04IDE4aDEyIi8+PGNpcmNsZSBjeD0iNCIgY3k9IjYiIHI9IjEuMyIvPjxjaXJjbGUgY3g9IjQiIGN5PSIxMiIgcj0iMS4zIi8+PGNpcmNsZSBjeD0iNCIgY3k9IjE4IiByPSIxLjMiLz48L3N2Zz4="/>
+      <view class="link-num">{{wantCount}}</view>
+      <view class="link-label">想做清单</view>
+      <view wx:if="{{wantCount === 0}}" class="link-zero">还没想做的</view>
+    </view>
+  </view>
+
+  <!-- 日期动态曲线 -->
+  <view class="section">
+    <view class="section-title trend-title">
+      <image class="title-ico" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNDOEE5OEUiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik00IDE2bDUtNSA0IDQgNy03Ii8+PHBhdGggZD0iTTIwIDh2NGgtNCIvPjwvc3ZnPg=="/>
+      趋势曲线
+    </view>
+    <view class="card">
+      <view class="seg-wrap">
+        <view class="segment metric-seg">
+          <view class="segment-item {{curveMetric === 'inventoryValue' ? 'active' : ''}}" data-m="inventoryValue" bindtap="switchMetric">库存估值</view>
+          <view class="segment-item {{curveMetric === 'sales' ? 'active' : ''}}" data-m="sales" bindtap="switchMetric">销售额</view>
+          <view class="segment-item {{curveMetric === 'profit' ? 'active' : ''}}" data-m="profit" bindtap="switchMetric">利润</view>
+          <view class="segment-item {{curveMetric === 'lossCost' ? 'active' : ''}}" data-m="lossCost" bindtap="switchMetric">损耗成本</view>
+        </view>
+      </view>
+      <view class="seg-wrap" style="margin-top:12rpx;">
+        <view class="segment range-seg">
+          <view class="segment-item {{curveRange === 7 ? 'active' : ''}}" data-r="7" bindtap="switchRange">近7天</view>
+          <view class="segment-item {{curveRange === 30 ? 'active' : ''}}" data-r="30" bindtap="switchRange">近30天</view>
+          <view class="segment-item {{curveRange === 'custom' ? 'active' : ''}}" data-r="custom" bindtap="switchRange">自定义</view>
+        </view>
+      </view>
+      <view wx:if="{{curveRange === 'custom'}}" class="custom-range">
+        <view class="range-picker picker-trigger" bindtap="openStartDate">{{startDate || '起始'}}</view>
+        <text class="range-tilde">至</text>
+        <view class="range-picker picker-trigger" bindtap="openEndDate">{{endDate || '结束'}}</view>
+      </view>
+      <!-- V142：本页曲线都是金额（库存估值 / 损耗成本 / 销售额 / 利润）⇒ 纵轴刻度带 ¥ -->
+      <line-chart points="{{curvePoints}}" unit="¥" unitPos="pre" height="320"></line-chart>
+      <view wx:if="{{curvePoints.length <= 1}}" class="curve-tip">产生订单后自动生成利润曲线</view>
+    </view>
+  </view>
+
+  <!-- 统计弹窗：点击数据卡片后全屏展开
+       注意：catchtouchmove 只能绑在遮罩上 —— 绑到 popup 上会把内部 scroll-view 的滚动一起拦掉，弹窗就滑不动了 -->
+  <view class="stat-popup" wx:if="{{statVisible}}">
+    <view class="stat-mask" bindtap="closeStat" catchtouchmove="preventTouchMove"></view>
+    <view class="stat-panel">
+      <scroll-view scroll-y class="stat-scroll" enable-flex enhanced show-scrollbar="{{false}}">
+        <!-- 顶部导航 -->
+        <view class="stat-header">
+          <view class="stat-back" bindtap="closeStat">
+            <image class="stat-ico" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM1QzQ2MzIiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTkgMTJINCIvPjxwYXRoIGQ9Ik0xMiAxOSw1IDEybDctNyIvPjwvc3ZnPg=="/>
+          </view>
+          <view class="stat-title">{{statData.title}}</view>
+          <!-- 右侧占位：只为让标题视觉居中。原先这里是个没有任何功能的筛选按钮（bindtap="noop"），已删 -->
+          <view class="stat-ico-ph"></view>
+        </view>
+
+        <!-- 月 / 年 切换与时间行：物料类统计只有「当前值」，hasTime=false 时整块隐藏 -->
+        <view class="stat-capsule primary" wx:if="{{statData.hasTime !== false}}">
+          <view class="cap-item {{statPeriod === 'month' ? 'active' : ''}}" data-period="month" bindtap="switchStatPeriod">月</view>
+          <view class="cap-item {{statPeriod === 'year' ? 'active' : ''}}" data-period="year" bindtap="switchStatPeriod">年</view>
+        </view>
+
+        <view class="stat-timebar" wx:if="{{statData.hasTime !== false}}">
+          <view class="time-arrow" bindtap="prevStatDate">
+            <image class="stat-ico" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM1QzQ2MzIiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTkgMTJMNSAxMiIvPjxwYXRoIGQ9Ik0xMiA5bC03IDcgNy03Ii8+PC9zdmc+"/>
+          </view>
+          <view class="time-current" bindtap="openMonthPicker">
+            <image class="time-ico" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5Qzk0OEIiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjQiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjIiLz48cGF0aCBkPSJNMTYgMnY0TTEyIDJ2NE02IDJ2NE0zIDEwaDE4Ii8+PC9zdmc+"/>
+            <text>{{statData.curLabel}}</text>
+            <text class="time-caret">▾</text>
+          </view>
+          <view class="time-arrow" bindtap="nextStatDate">
+            <image class="stat-ico" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM1QzQ2MzIiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNNSAxMmwxNCAwIi8+PHBhdGggZD0iTTEyIDE1bDctLTctNyA3IiB0cmFuc2Zvcm09InJvdGF0ZSgtOTAgMTIgMTIpIi8+PC9zdmc+"/>
+          </view>
+        </view>
+
+        <!-- 图表区：纯 DOM / CSS 渲染。
+             不用 canvas 的原因：canvas 是原生组件（层级最高会穿透弹层；同层渲染失败时还不随滚动），
+             转成图片虽能绕开但会丢掉点击交互、文字也会被画布边界裁掉。 -->
+        <view class="stat-chart-wrap">
+          <view class="stat-chart-box">
+          <!-- 环形图：conic-gradient 画浅色细环；分类名+百分比用折线引线拉到环外，互不遮挡 -->
+          <block wx:if="{{chartType === 'ring'}}">
+            <view wx:if="{{ring}}" class="ring-wrap"
+                  bindtouchstart="onRingTouchStart" bindtouchend="onRingTouchEnd">
+              <view class="ring-arc"
+                    style="left:{{ring.ringLeft}}px;top:{{ring.ringTop}}px;width:{{ring.ringSize}}px;height:{{ring.ringSize}}px;background:conic-gradient({{ring.gradient}})"></view>
+              <view class="ring-hole"
+                    style="left:{{ring.holeLeft}}px;top:{{ring.holeTop}}px;width:{{ring.holeSize}}px;height:{{ring.holeSize}}px;">
+                <text class="ring-cap">总计</text>
+                <text class="ring-total">{{statData.totalText}}</text>
+              </view>
+              <!-- 折线引线：斜线段 → 水平段 -->
+              <block wx:for="{{ring.labels}}" wx:key="idx">
+                <view class="rv-lead" style="left:{{item.x1}}px;top:{{item.y1}}px;width:{{item.len1}}px;transform:rotate({{item.deg1}}deg)"></view>
+                <view class="rv-lead-h" style="left:{{item.hx}}px;top:{{item.hy}}px;width:{{item.hw}}px"></view>
+              </block>
+              <!-- 环外标签：分类名 + 百分比 -->
+              <view wx:for="{{ring.labels}}" wx:key="idx" class="rv-label rv-{{item.side}}"
+                    data-idx="{{item.idx}}" catchtap="onRingTap"
+                    style="left:{{item.lx}}px;top:{{item.ly}}px;width:{{item.lw}}px;">
+                <text class="rv-name">{{item.name}}</text>
+                <text class="rv-pct">{{item.percentText}}</text>
+              </view>
+            </view>
+            <view wx:else class="chart-empty">暂无数据</view>
+          </block>
+
+          <!-- 折线图：每段一个旋转细条 + 数据点（坐标由 JS 按容器尺寸算好） -->
+          <block wx:elif="{{chartType === 'line'}}">
+            <view wx:if="{{lineLayout}}" class="lc">
+              <view class="lc-grid">
+                <view class="lc-grid-line"></view>
+                <view class="lc-grid-line"></view>
+                <view class="lc-grid-line"></view>
+              </view>
+              <view class="lc-area" style="clip-path:{{lineLayout.areaClip}}"></view>
+              <!-- y 轴刻度（上=大、下=小，单位元） -->
+              <text wx:for="{{lineLayout.yTicks}}" wx:key="value" class="lc-y" style="top:{{item.y}}px">{{item.text}}</text>
+              <view class="lc-seg" wx:for="{{lineLayout.segs}}" wx:key="index"
+                    style="left:{{item.x}}px;top:{{item.y}}px;width:{{item.len}}px;transform:rotate({{item.deg}}deg)"></view>
+              <!-- 折点：点一下浮现当日数据 -->
+              <view class="lc-dot" wx:for="{{lineLayout.dots}}" wx:key="index" wx:if="{{item.showDot}}"
+                    style="left:{{item.x}}px;top:{{item.y}}px"
+                    data-x="{{item.x}}" data-y="{{item.y}}" data-tip="{{item.tip}}" bindtap="onLineDotTap"></view>
+              <!-- x 轴刻度（首 / 中 / 尾） -->
+              <!-- V142：日期刻度从 3 档改成 4 档，位置改由布局层给像素坐标（内联 style）——
+                 改前靠 lc-x0/lc-xm/lc-x1 三个类名定位，4 档时两个"中"会叠在 50% 上 -->
+              <text wx:for="{{lineLayout.xTicks}}" wx:key="x" class="lc-x" style="{{item.style}}">{{item.text}}</text>
+              <!-- 点折点浮现的数据气泡 -->
+              <view wx:if="{{lineTip}}" class="lc-tip" style="left:{{lineTip.x}}px;top:{{lineTip.y}}px">{{lineTip.text}}</view>
+            </view>
+            <view wx:else class="chart-empty">暂无数据</view>
+          </block>
+
+          <!-- 柱状图：纯 CSS 高度百分比 -->
+          <block wx:else>
+            <view wx:if="{{bars.length}}" class="bc">
+              <view wx:for="{{bars}}" wx:key="index" class="bc-col">
+                <view class="bc-bar" style="height:{{item.hPct}}%"></view>
+                <text class="bc-lb">{{item.showLabel ? item.dateLabel : ''}}</text>
+              </view>
+            </view>
+            <view wx:else class="chart-empty">暂无数据</view>
+          </block>
+          </view>
+        </view>
+
+        <!-- 视图切换胶囊（只有一个视图时不显示） -->
+        <view class="stat-capsule secondary" wx:if="{{statData.views.length > 1}}">
+          <view wx:for="{{statData.views}}" wx:key="key"
+                class="cap-item {{statViewIndex === index ? 'active' : ''}}"
+                data-idx="{{index}}" bindtap="switchStatView">{{item.label}}</view>
+        </view>
+
+        <!-- 分类明细列表 -->
+        <view class="stat-list" wx:if="{{statList.length}}">
+          <view class="stat-list-title">分类明细</view>
+          <view class="stat-list-row" wx:for="{{statList}}" wx:key="key" data-idx="{{index}}" bindtap="onListTap">
+            <view class="row-left">
+              <view class="row-icon" style="background:{{item.color}}26;">
+                <text class="row-icon-text" style="color:{{item.color}};">{{item.name.slice(0,1)}}</text>
+              </view>
+              <view class="row-name">
+                <text class="row-name-text">{{item.name}}</text>
+                <text class="row-percent">{{item.percentText}}</text>
+              </view>
+            </view>
+            <view class="row-bar-bg">
+              <view class="row-bar-fill" style="width:{{item.percent * 100}}%;background:{{item.color}};"></view>
+            </view>
+            <view class="row-right">
+              <view wx:if="{{item.change !== 0}}" class="row-trend {{item.trend}}">
+                <text class="row-arrow">{{item.trend === 'up' ? '▲' : '▼'}}</text>
+                <text class="row-change">{{item.changeText}}</text>
+              </view>
+              <view class="row-value">{{item.valueText}}</view>
+            </view>
+          </view>
+        </view>
+
+        <view wx:if="{{!statList.length}}" class="stat-empty">暂无分类明细</view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 第二层明细：某个大类 / 品类下的具体物料或成品，点一行进各自详情页 -->
+  <view class="dt-popup" wx:if="{{dtVisible}}">
+    <view class="dt-mask" bindtap="closeDetail" catchtouchmove="preventTouchMove"></view>
+    <view class="dt-panel">
+      <view class="dt-head">
+        <view class="dt-head-left">
+          <view class="dt-title">{{dtTitle}}</view>
+          <view class="dt-count">{{dtList.length}} 项</view>
+        </view>
+        <view class="dt-close" bindtap="closeDetail">×</view>
+      </view>
+      <scroll-view scroll-y class="dt-scroll" enable-flex enhanced show-scrollbar="{{false}}">
+        <view class="dt-row" wx:for="{{dtList}}" wx:key="id"
+              data-id="{{item.id}}" bindtap="goDetailItem">
+          <image wx:if="{{item.thumb}}" class="dt-thumb" src="{{item.thumb}}" mode="aspectFill" />
+          <view wx:else class="dt-thumb ph-fill" style="background:{{item.color}};color:{{item.ink}}">{{item.placeholder}}</view>
+          <view class="dt-body">
+            <view class="dt-name">{{item.name}}</view>
+            <view class="dt-sub">{{item.sub}}</view>
+          </view>
+          <view class="dt-val">{{item.valueText}}</view>
+        </view>
+        <view wx:if="{{!dtList.length}}" class="dt-empty">这个大类下还没有内容</view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 月份选择：底部弹窗，竖向滚动，区间为注册月 → 当月 -->
+  <view class="month-popup" wx:if="{{showMonthPicker}}" bindtap="closeMonthPicker" catchtouchmove="noop">
+    <view class="month-panel" catchtap="noop">
+      <view class="month-grip"></view>
+      <view class="month-head">
+        <text class="month-title">选择月份</text>
+        <text class="month-close" bindtap="closeMonthPicker">×</text>
+      </view>
+      <scroll-view scroll-y class="month-scroll" enable-flex enhanced show-scrollbar="{{false}}">
+        <view wx:for="{{monthList}}" wx:key="*this"
+              class="month-item {{item === statMonth ? 'active' : ''}}"
+              data-m="{{item}}" bindtap="pickMonth">
+          <text class="month-text">{{item}}</text>
+          <text wx:if="{{item === statMonth}}" class="month-check">✓</text>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <date-picker-sheet show="{{dpStart}}" title="选择起始日期" value="{{startDate}}" bind:change="onStartChange" bind:confirm="closeDate" bind:cancel="closeDate" />
+  <date-picker-sheet show="{{dpEnd}}" title="选择结束日期" value="{{endDate}}" bind:change="onEndChange" bind:confirm="closeDate" bind:cancel="closeDate" />
+  </view>
+</view>

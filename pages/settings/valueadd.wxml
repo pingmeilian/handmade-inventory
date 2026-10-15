@@ -1,0 +1,14 @@
+<!-- pages/settings/valueadd.wxml —— 二期功能说明 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <view class="card notice">
+    <view class="notice-title">二期（M2）功能</view>
+    <view class="t-body">以下功能属于里程碑二期（AI 辅助），本期「里程碑一」未开发，仅作规划展示。</view>
+  </view>
+  <view class="card feat" wx:for="{{features}}" wx:key="name">
+    <view class="feat-name">{{item.name}}</view>
+    <view class="feat-desc">{{item.desc}}</view>
+  </view>
+  <view class="t-min tip">如需提前体验，请等待二期版本发布。</view>
+</view>

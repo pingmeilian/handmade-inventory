@@ -1,0 +1,47 @@
+/* pages/settings/history.wxss */
+.space-bar { margin-bottom: 24rpx; }
+.space-name { font-size: 34rpx; font-weight: 600; color: var(--color-text-1); }
+
+/* V136：从「累计总账」跳进来时的口径说明。
+   样式上刻意做得像"旁注"（浅底、小字、无阴影）——它是解释，不是内容，别像卡片一样抢视线。
+   全部走主题变量：四套主题自动跟着变。 */
+.ledger-note {
+  margin-bottom: 24rpx; padding: 18rpx 22rpx;
+  background: var(--color-surface-2); border-radius: var(--radius-inner);
+  font-size: 22rpx; line-height: 1.55; color: var(--color-text-3);
+}
+
+/* 2026-09-27 V72：面积单位切换控件已删除（改为按数值自动选 cm²/m²），
+   原来为它加的 .card .section-title 两端对齐、.area-toggle、.at 一并移除，
+   回到全局 .section-title 的默认排版（与其他页面一致）。 */
+
+.flow-row { display: flex; align-items: center; justify-content: space-between; padding: 18rpx 0; border-bottom: 1rpx solid var(--color-divider); }
+.flow-row:last-child { border-bottom: none; }
+.flow-left { flex: 1; min-width: 0; }
+.flow-type { font-size: 26rpx; font-weight: 600; margin-right: 12rpx; }
+.flow-name { font-size: 26rpx; color: var(--color-text-1); }
+.flow-src { font-size: 20rpx; color: var(--color-text-3); margin-left: 12rpx; }
+.flow-right { text-align: right; flex: none; }
+.flow-qty { font-size: 28rpx; font-weight: 600; font-variant-numeric: tabular-nums; }
+.flow-unit { font-size: 20rpx; color: var(--color-text-3); margin-left: 6rpx; }
+.flow-bal { font-size: 20rpx; color: var(--color-text-3); display: block; margin-top: 4rpx; }
+
+/* 筛选卡片 */
+.filter-card { background: var(--color-surface); border-radius: var(--radius-card); padding: 22rpx 24rpx; margin-bottom: 24rpx; box-shadow: var(--shadow-card); }
+.filter-row { display: flex; align-items: center; gap: 16rpx; flex-wrap: wrap; margin-bottom: 16rpx; }
+.filter-row:last-child { margin-bottom: 0; }
+.filter-label { font-size: 24rpx; color: var(--color-text-3); width: 72rpx; flex: none; }
+.filter-input { flex: 1; min-width: 200rpx; background: var(--color-surface-2); border-radius: var(--radius-pill); height: 60rpx; line-height: 60rpx; padding: 0 26rpx; font-size: 26rpx; color: var(--color-text-1); }
+.chip { flex: none; height: 60rpx; line-height: 60rpx; padding: 0 26rpx; background: var(--color-surface-2); color: var(--color-text-2); border-radius: var(--radius-pill); font-size: 24rpx; }
+.chip.on { background: var(--color-primary); color: var(--color-primary-on); font-weight: 600; }
+.range-picker { background: var(--color-surface-2); border-radius: var(--radius-inner); padding: 12rpx 22rpx; font-size: 24rpx; color: var(--color-text-1); }
+.range-tilde { font-size: 24rpx; color: var(--color-text-3); }
+.filter-reset { font-size: 24rpx; color: var(--color-primary); padding: 8rpx 12rpx; margin-left: auto; }
+.seg-wrap { width: 100%; }
+.metric-seg .segment-item { font-size: 24rpx; }
+
+/* 趋势曲线的区间摘要与口径说明（V142）：
+   用户原话「根本看不到有用的信息」—— 摘要行就是"有用信息"最直接的来源
+   （期初/期末/净变化、多少天有动作、峰值那天多少）。 */
+.curve-sum { margin-top: 14rpx; font-size: 24rpx; color: var(--color-text-2); line-height: 1.5; }
+.curve-note { margin-top: 8rpx; font-size: 22rpx; color: var(--color-text-3); line-height: 1.5; }

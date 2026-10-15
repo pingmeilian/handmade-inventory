@@ -1,0 +1,243 @@
+<!-- pages/materials/edit.wxml —— 物料新增 / 编辑 -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+  <!-- ① 基础信息 -->
+  <view class="card">
+    <view class="field">
+      <view class="field-label">物料分类</view>
+      <view class="field-control picker-trigger" bindtap="openMcPicker">{{mcList[mcIndex].name}}（选择后自动带出单位与属性）</view>
+    </view>
+  </view>
+
+  <!-- ② 照片 -->
+  <view class="card">
+    <view class="field">
+      <view class="field-label">照片</view>
+      <view class="photo-wrap">
+        <view class="photo-item" wx:for="{{photos}}" wx:key="*this">
+          <image class="photo-thumb" src="{{item}}" mode="aspectFill" data-i="{{index}}" bindtap="previewPhoto" />
+          <view class="photo-del" data-i="{{index}}" bindtap="delPhoto">✕</view>
+        </view>
+        <view wx:if="{{photos.length<9}}" class="photo-actions">
+          <view class="photo-btn" bindtap="takePhoto">拍照</view>
+          <view class="photo-btn" bindtap="chooseFromAlbum">从相册选择</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ③ 属性（层级属性 + 关键词） -->
+  <view class="card">
+    <view class="section-title">属性</view>
+
+    <view wx:for="{{attrGroups}}" wx:for-item="g" wx:for-index="gi" wx:key="dimension" class="attr-block">
+      <view class="attr-dim">{{g.dimension}}</view>
+      <!-- 预设选项（颜色、材质、花纹） -->
+      <view wx:if="{{g.options && g.options.length}}" class="preset-row">
+        <scroll-view scroll-x class="preset-scroll">
+          <view class="preset-inner">
+            <text wx:for="{{g.options}}" wx:for-item="pv" wx:key="*this" class="preset-chip {{g.value===pv?'on':''}}" data-i="{{gi}}" data-v="{{pv}}" bindtap="onAttrPreset">{{pv}}</text>
+          </view>
+        </scroll-view>
+      </view>
+      <ph-input ph-class="field-control input" placeholder="输入或选择{{g.dimension}}" value="{{g.value}}" ds="{{ {i: gi} }}" bind:input="onAttrVal" />
+    </view>
+
+    <view class="field field-keywords">
+      <view class="field-label">关键词<span class="req">*</span><text class="t-min">　属性+关键词自动生成名称</text></view>
+      <ph-input ph-class="field-control input" placeholder="请输入颜色、材质、花纹以外的特征" value="{{keywords}}" bind:input="onKeywords" />
+    </view>
+  </view>
+
+  <!-- ④ 生成名称（只读，属性+关键词自动拼接） -->
+  <view class="gen-name-bar">
+    <view class="gn-label">生成名称</view>
+    <view class="gn-value">{{generatedName || '—'}}</view>
+  </view>
+
+  <!-- ⑤ 规格与价格（单位 + 面料长/幅宽 + 数量 + 总价） -->
+  <view class="card spec-block">
+    <view class="section-title">规格与价格</view>
+
+    <!-- 单位：只有非面料才渲染（V127）
+         面料的单位**恒为米**（计价走长×宽，见 edit.js 的 isFabric 分支），
+         给它一个选择器 = 让用户做一个"没有第二种正确答案"的选择；
+         而它原先和「按批估量」挤在同一行，把右侧的说明文字挤到截断。 -->
+    <view wx:if="{{!isFabric}}" class="spec-row spec-row-unit">
+      <view class="spec-label">单位<span class="req">*</span></view>
+      <view class="spec-body">
+        <view class="spec-input picker-trigger" bindtap="openUnitPicker">{{unit || '请选择单位'}}</view>
+      </view>
+    </view>
+
+    <!-- 按批估量：独立一行、从卡片最左起（V127）
+         为什么独立成行：同一行里 96rpx 的输入框与原生开关（约 62rpx）必然高度不齐；
+         为什么从最左起：右侧整行留给说明文字，不再截断。 -->
+    <view wx:if="{{isFabric}}" class="spec-row spec-batch-row">
+      <text class="spec-batch-name">按批估量</text>
+      <switch checked="{{showBatch}}" bindchange="onToggleBatch" color="{{switchColor}}" />
+      <text class="spec-head-tip">刀口布按总重/片数计价</text>
+    </view>
+
+    <!-- 面料：长（按片精确模式显示） -->
+    <view wx:if="{{isFabric && !showBatch}}" class="spec-row">
+      <view class="spec-label">长</view>
+      <view class="spec-body">
+        <view class="unit-toggle" bindtap="onToggleLenUnit">
+          <text class="ut {{fabricLenUnit==='m'?'on':''}}">m</text>
+          <text class="ut {{fabricLenUnit==='cm'?'on':''}}">cm</text>
+        </view>
+        <ph-input ph-class="spec-input" type="digit" placeholder="如 2.0" value="{{fabricLength}}" bind:input="onFabricLength" />
+      </view>
+    </view>
+
+    <!-- 面料：幅宽（按片精确模式显示） -->
+    <view wx:if="{{isFabric && !showBatch}}" class="spec-row">
+      <view class="spec-label">幅宽</view>
+      <view class="spec-body">
+        <view class="unit-toggle" bindtap="onToggleWidUnit">
+          <text class="ut {{fabricWidUnit==='m'?'on':''}}">m</text>
+          <text class="ut {{fabricWidUnit==='cm'?'on':''}}">cm</text>
+        </view>
+        <ph-input ph-class="spec-input" type="digit" placeholder="如 1.5" value="{{fabricWidth}}" bind:input="onFabricWidth" />
+        <view class="quick-btns">
+          <view class="quick-btn {{fabricWidth==='1.5'?'on':''}}" bindtap="onQuickWidth" data-v="1.5">1.5</view>
+          <view class="quick-btn {{widthMode==='custom'?'on':''}}" bindtap="onWidthModeCustom">其他</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 面料：按批估量输入（计量 / 总量 / 均价 与 piece 面料统一左右同行布局） -->
+    <view wx:if="{{isFabric && showBatch}}" class="spec-row">
+      <view class="spec-label">计量</view>
+      <view class="spec-body">
+        <view class="unit-toggle">
+          <text class="ut {{batchUnit==='kg'?'on':''}}" bindtap="onBatchUnit" data-u="kg">kg</text>
+          <text class="ut {{batchUnit==='g'?'on':''}}" bindtap="onBatchUnit" data-u="g">g</text>
+          <text class="ut {{batchUnit==='piece'?'on':''}}" bindtap="onBatchUnit" data-u="piece">片</text>
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{isFabric && showBatch}}" class="spec-row">
+      <view class="spec-label">总量<span class="req">*</span></view>
+      <view class="spec-body">
+        <ph-input ph-class="spec-input" type="digit" placeholder="如 2.5" value="{{batchTotal}}" bind:input="onBatchTotal" />
+        <text class="spec-suffix">{{batchUnit==='piece'?'片':batchUnit}}</text>
+      </view>
+    </view>
+    <view wx:if="{{isFabric && showBatch && calcPrice}}" class="spec-row">
+      <view class="spec-label">均价</view>
+      <view class="spec-body">
+        <text class="spec-price-hint">≈ ¥{{calcPrice}}/{{batchUnit==='piece'?'片':batchUnit}}</text>
+      </view>
+    </view>
+
+    <!-- 数量：非面料新建时必填（可小数） -->
+    <view wx:if="{{showPriceFields && !isFabric}}" class="spec-row">
+      <view class="spec-label">数量<span class="req">*</span></view>
+      <view class="spec-body">
+        <ph-input ph-class="spec-input" type="{{qtyInteger?'number':'digit'}}" placeholder="{{qtyInteger?'整数数量':'0，可填小数如 1.5'}}" value="{{qty}}" bind:input="onQty" />
+        <text class="spec-suffix">{{unit}}</text>
+      </view>
+    </view>
+
+    <!-- 本次总价：统一用左右同行结构 -->
+    <view wx:if="{{showPriceFields}}" class="spec-row spec-row-total">
+      <view class="spec-label">总价<span class="req">*</span></view>
+      <view class="spec-body">
+        <ph-input ph-class="spec-input" type="digit" placeholder="0.00" value="{{totalPrice}}" bind:input="onTotalPrice" />
+      </view>
+    </view>
+    <view wx:if="{{showPriceFields && calcPrice}}" class="spec-row">
+      <view class="spec-label"></view>
+      <view class="spec-body">
+        <text class="spec-head-tip">{{ isFabric && showBatch ? '系统将根据总量自动算出单价' : '系统将根据数量/面积自动算出均价' }}</text>
+        <text class="spec-price-hint">≈ 均价 ¥{{calcPrice}}/{{avgUnit || unit}}</text>
+      </view>
+    </view>
+
+    <!-- 当前均价（编辑态只读） -->
+    <view wx:if="{{!showPriceFields}}" class="spec-row">
+      <view class="spec-label">当前均价</view>
+      <view class="spec-body">
+        <view class="spec-input static">{{avgPrice}}/{{avgUnit}}</view>
+      </view>
+    </view>
+
+    <!-- 库存总值（编辑态只读）：账面口径，由出入库流水维护 —— 所以这里只展示、不改，也不参与保存 -->
+    <view wx:if="{{!showPriceFields}}" class="spec-row">
+      <view class="spec-label">库存总值</view>
+      <view class="spec-body">
+        <view class="spec-input static">¥{{stockValueText}}</view>
+      </view>
+    </view>
+    <view wx:if="{{!showPriceFields}}" class="spec-row">
+      <view class="spec-label"></view>
+      <view class="spec-body">
+        <text class="t-min">库存总值与均价由出入库流水自动维护，编辑资料不会改动它们。</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ⑥ 更多信息（含库存预警阈值） -->
+  <view class="card">
+    <view class="section-title">更多信息</view>
+
+    <!-- 订单截图：存订单详情页截图，方便回看 -->
+    <view class="field">
+      <view class="field-label">订单截图<text class="t-min">　存订单详情页，方便回看</text></view>
+      <view class="photo-wrap">
+        <view class="photo-item" wx:for="{{orderImages}}" wx:key="*this">
+          <image class="photo-thumb" src="{{item}}" mode="aspectFill" data-i="{{index}}" bindtap="previewOrderImg" />
+          <view class="photo-del" data-i="{{index}}" bindtap="delOrderImg">✕</view>
+        </view>
+        <view wx:if="{{orderImages.length < 3}}" class="photo-actions">
+          <view class="photo-btn" bindtap="chooseOrderImg">上传截图</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 购买平台：一级分类 / 二级渠道（预设可选，也可手改） -->
+    <view class="field">
+      <view class="field-label">购买平台</view>
+      <view class="pf-row">
+        <view wx:if="{{platformL1.length>1}}" class="field-control pf-picker picker-trigger" bindtap="openPfL1Picker">{{platformL1[platformL1Index]}}</view>
+        <text wx:else class="pf-tag">{{platformL1[platformL1Index]}}</text>
+        <text class="pf-sep">/</text>
+        <view class="field-control pf-picker picker-trigger" bindtap="openPfL2Picker">{{purchaseL2 || '请选择渠道'}}</view>
+      </view>
+      <ph-input ph-class="field-control input" placeholder="可手动修改渠道，如 微信小店" value="{{purchaseL2}}" bind:input="onPfL2Custom" />
+    </view>
+
+    <view class="field">
+      <view class="field-label">店铺名</view>
+      <ph-input ph-class="field-control input" placeholder="选填，回购时好找" value="{{shopName}}" bind:input="onShopName" />
+    </view>
+
+    <view class="field">
+      <view class="field-label">商品链接</view>
+      <view class="url-row">
+        <ph-input ph-class="field-control input url-input" placeholder="选填，粘贴商品网址" value="{{productUrl}}" bind:input="onProductUrl" />
+        <view wx:if="{{productUrl}}" class="url-copy" data-url="{{productUrl}}" bindtap="copyUrl">复制</view>
+      </view>
+    </view>
+
+    <view class="field">
+      <view class="field-label">备注</view>
+      <ph-input ph-class="field-control input" multiline autoHeight placeholder="选填" value="{{remark}}" bind:input="onRemark" />
+    </view>
+
+    <view class="field">
+      <view class="field-label">低库存预警阈值</view>
+      <ph-input ph-class="field-control input" type="digit" placeholder="留空则用全局默认（5）" value="{{threshold}}" bind:input="onThreshold" />
+    </view>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="btn btn-primary btn-large btn-block" bindtap="save">保存</view>
+  </view>
+  <view class="safe-bottom"></view>
+
+  <picker-sheet show="{{picker.show}}" title="{{picker.title}}" options="{{picker.options}}" range-key="{{picker.rangeKey}}" value="{{picker.value}}" bind:cancel="closePicker" bind:confirm="onPickerConfirm" />
+</view>

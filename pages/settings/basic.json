@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "默认值与预警",
+  "usingComponents": {
+    "ph-input": "/components/ph-input/ph-input"
+  }
+}

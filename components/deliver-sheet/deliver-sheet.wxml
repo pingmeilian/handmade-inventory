@@ -1,0 +1,39 @@
+<!-- components/deliver-sheet/deliver-sheet.wxml —— 排单交付弹窗（V149）
+     底部面板：一次问清「交多少 + 货从哪来」。来源**不预选**，必须用户点一下。
+     V152：文案极简 —— 每条说明压到一行、只留"扣不扣料"这个关键区别（用户的诉求：
+           "说明的字太多了，简短一点，极简，用户能看懂就行"）。
+           删掉了原先底部的三态长提示（ds-hint）—— 卡片副标题已经把话说完了，
+           再多说一遍是噪音。 -->
+<view wx:if="{{show}}" class="ds-mask" bindtap="onMaskTap">
+  <view class="ds-sheet" catchtap="noop">
+    <view class="ds-title">{{title}}</view>
+
+    <view class="ds-field">
+      <view class="ds-label">交付数量<text class="ds-sub">（剩余 {{remain}}）</text></view>
+      <ph-input ph-class="ds-input" type="digit" value="{{qty}}" bind:input="onQty" />
+    </view>
+
+    <view class="ds-label">货从哪来<text class="ds-req">（必选）</text></view>
+    <view class="ds-opts">
+      <view class="ds-opt {{mode==='product'?'on':''}} {{stock<=0?'off':''}}" data-m="product" bindtap="pick">
+        <view class="ds-opt-top">
+          <text class="ds-opt-name">从成品在库出</text>
+          <text class="ds-badge {{stock<=0?'badge-off':''}}">{{stock<=0 ? '在库 0 件' : '在库 '+stock+' 件'}}</text>
+        </view>
+        <view class="ds-opt-sub">库存直发，<text class="ds-em">不扣料</text></view>
+      </view>
+
+      <view class="ds-opt {{mode==='material'?'on':''}}" data-m="material" bindtap="pick">
+        <view class="ds-opt-top">
+          <text class="ds-opt-name">从物料出（现做现交）</text>
+        </view>
+        <view class="ds-opt-sub">现做<text class="ds-em">扣料</text><block wx:if="{{needCut}}"> · 先去裁剪页选布</block></view>
+      </view>
+    </view>
+
+    <view class="ds-ops">
+      <view class="ds-btn ds-btn-ghost" bindtap="onCancel">取消</view>
+      <view class="ds-btn ds-btn-primary" bindtap="onConfirm">确认交付</view>
+    </view>
+  </view>
+</view>

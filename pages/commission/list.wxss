@@ -1,0 +1,44 @@
+/* pages/commission/list.wxss */
+.page-wrap { padding: 24rpx 24rpx 160rpx; box-sizing: border-box; }
+
+.space-bar { padding: 4rpx 8rpx 16rpx; }
+.space-name { font-size: 30rpx; color: var(--color-text-2); font-weight: 600; }
+
+.seg-wrap { display: flex; justify-content: center; margin-bottom: 20rpx; }
+/* ⚠️ 卡面 vs 下沉底，别混用（2026-09-14 修 16 处失效变量时定下的口径）：
+   · 卡片底（.cm-card / .link-card）→ --color-surface   （var(--color-surface)，要浮在页面之上）
+   · 下沉底 / 占位 / 轨道 / 胶囊（.seg / .photo / .status-pill / .switch）→ --color-surface-2（var(--color-surface-2)，要陷进去）
+   旧的 --color-bg-card 已经被删（它在这两种语义上都被用过，一刀切会把卡片刷成浅灰、轨道刷成白色）。 */
+.seg { display: inline-flex; background: var(--color-surface-2); border-radius: 999rpx; padding: 6rpx; box-shadow: var(--shadow-card); }
+.seg-item { padding: 12rpx 32rpx; font-size: 27rpx; color: var(--color-text-2); border-radius: 999rpx; transition: all .2s; }
+.seg-item.active { background: var(--color-primary); color: var(--color-primary-on); font-weight: 600; }
+
+/* 行距与卡面阴影移到外层：
+   · .swipe-row 管行距（卡片自带下外边距会让操作区多出一截"空档"，与卡片不等高）
+   · swipe-cell 根节点管圆角与阴影（它 overflow:hidden，内层卡片的阴影会被裁掉） */
+.swipe-row { margin-bottom: 18rpx; }
+.cm-card {
+  background: var(--color-surface); border-radius: var(--radius-card);
+  padding: 24rpx;
+}
+.cm-top { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
+.cm-name { font-size: 30rpx; font-weight: 600; color: var(--color-text-1); }
+.cm-sub { margin-top: 12rpx; font-size: 26rpx; color: var(--color-text-2); }
+.cm-foot { margin-top: 12rpx; display: flex; align-items: center; justify-content: space-between; }
+.cm-deadline { font-size: 24rpx; color: var(--color-text-3); }
+.cm-days { font-size: 24rpx; color: var(--color-primary); font-weight: 600; }
+
+/* 状态标签（温柔色系） */
+.tag { padding: 6rpx 18rpx; border-radius: 999rpx; font-size: 22rpx; font-weight: 600; }
+.badge-danger { background: #F6D9D2; color: #C0502E; }
+.badge-warning { background: #F7E6CE; color: #B9802F; }
+.badge-ok { background: #E4EFE6; color: #4E8D5B; }
+.badge-normal { background: var(--color-surface-2); color: var(--color-text-2); }
+
+.fab {
+  position: fixed; right: 40rpx; bottom: 60rpx;
+  width: 96rpx; height: 96rpx; border-radius: 50%;
+  background: var(--color-primary); color: var(--color-primary-on); font-size: 56rpx;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-btn); z-index: 20;
+}

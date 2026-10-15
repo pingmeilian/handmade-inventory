@@ -1,0 +1,13 @@
+/* pages/materials/category.wxss —— 手作空间切换 */
+.cat-card {
+  display: flex; align-items: center; gap: 20rpx;
+  background: var(--color-surface); border-radius: var(--radius-card);
+  padding: 32rpx 28rpx; margin-bottom: 20rpx; box-shadow: var(--shadow-card);
+  border: 2rpx solid transparent;
+}
+.cat-card.on { border-color: var(--color-primary); background: var(--color-primary-soft); }
+.cat-dot { width: 24rpx; height: 24rpx; border-radius: 50%; background: var(--color-surface-2); flex: none; }
+.cat-dot.on { background: var(--color-primary); }
+.cat-name { flex: 1; font-size: 30rpx; font-weight: 600; color: var(--color-text-1); }
+.add-btn { margin-top: 28rpx; }
+.tip { margin-top: 20rpx; text-align: center; }

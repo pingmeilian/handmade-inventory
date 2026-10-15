@@ -1,0 +1,156 @@
+/* pages/materials/edit.wxss —— 物料编辑 */
+
+/* 照片上传 */
+.photo-wrap { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.photo-item { position: relative; width: 144rpx; height: 144rpx; border-radius: var(--radius-inner); overflow: hidden; }
+.photo-thumb { width: 100%; height: 100%; }
+.photo-del {
+  position: absolute; top: 0; right: 0; width: 40rpx; height: 40rpx;
+  background: var(--color-mask); color: #fff; font-size: 22rpx;
+  display: flex; align-items: center; justify-content: center;
+  border-bottom-left-radius: var(--radius-inner);
+}
+.photo-actions { width: 100%; display: flex; gap: 16rpx; }
+.photo-btn {
+  flex: 1; height: 120rpx; border-radius: var(--radius-inner);
+  border: 2rpx solid var(--color-primary);
+  background: var(--color-primary-soft); color: var(--color-primary-deep);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28rpx; font-weight: 600;
+}
+.photo-btn:active { background: var(--color-primary); color: var(--color-primary-on); }
+
+/* 生成名称只读条 */
+.gen-name-bar {
+  display: flex; align-items: center; gap: 20rpx;
+  background: #E6F1FB; border: 1rpx solid #85B7EB;
+  border-radius: var(--radius-card);
+  padding: 24rpx 28rpx; margin-bottom: var(--gap-card);
+}
+.gn-label {
+  flex: none; font-size: 26rpx; font-weight: 600; color: #0C447C;
+}
+.gn-value {
+  flex: 1; font-size: 28rpx; color: #0C447C;
+  word-break: break-all;
+}
+
+/* 层级属性 */
+.attr-block { margin-bottom: 24rpx; }
+.attr-block:last-child { margin-bottom: 0; }
+.attr-dim { font-size: 26rpx; color: var(--color-text-2); margin-bottom: 12rpx; }
+.preset-row { margin-bottom: 12rpx; }
+.preset-scroll { white-space: nowrap; }
+.preset-inner { display: inline-flex; gap: 12rpx; }
+.preset-chip {
+  flex: none; height: var(--chip-h); line-height: var(--chip-h); padding: 0 22rpx;
+  background: var(--color-surface-2); color: var(--color-text-2);
+  border-radius: var(--radius-pill); font-size: 26rpx;
+}
+.preset-chip.on { background: var(--color-primary-soft); color: var(--color-primary-deep); font-weight: 600; }
+
+/* ===== 规格与价格：三种模式统一左右同行布局 ===== */
+/* ⭐ 规格区控件高度：**唯一的数字来源**（V129 收口）
+   为什么要有这个变量：这一行并排着四种控件，其中"输入框"在 `ph-input` 组件里
+   （组件默认 styleIsolation: isolated ⇒ 页面样式进不去），它的高度由组件内 `.ph-control`
+   的 `min-height` 决定 = **80rpx**；而 m|cm 切换、快捷按钮是页面自己的元素。
+   两边各写一个数字 ⇒ 迟早会不一致（V127/V128 连续两轮修的就是这个）。
+   ⚠️ **改这个值时，组件那边必须跟着改**（`.ph-control` 的 min-height）——
+      守卫 `tests/material-spec-height.test.js` 会断言二者相等，改一处忘另一处会被当场抓住。
+   ⚠️ 也**不要**给规格区的输入框加 `tall`（那是 96rpx 档，只适合弹窗/教程卡）。 */
+.spec-block { --spec-h: 80rpx; }
+.spec-block .section-title { margin-bottom: 20rpx; }
+.spec-row { display: flex; align-items: center; gap: 16rpx; margin-bottom: 20rpx; }
+.spec-row:last-child { margin-bottom: 0; }
+/* 左侧标签：固定宽度、浅灰、右对齐、垂直居中 */
+.spec-label {
+  flex: none; width: 96rpx; font-size: 26rpx; color: var(--color-text-2);
+  line-height: 1.4; text-align: right; padding-right: 8rpx;
+}
+.spec-label .req { color: var(--color-danger); margin-left: 4rpx; }
+/* 右侧内容区：flex 横向、可折行、统一间隙 */
+.spec-body { flex: 1; min-width: 0; display: flex; align-items: center; gap: 16rpx; }
+/* 输入框样式（V128 更正一处长期误解；V129 改用 --spec-h 收口高度）
+   ⚠️ 这个类**只对本页里"非组件"的那两个元素生效**：
+      · 单位选择框 `<view class="spec-input picker-trigger">`
+      · 均价只读框 `<view class="spec-input static">`
+      **对 `<ph-input>` 里的输入框完全不生效** —— 组件默认 `styleIsolation: isolated`，
+      页面样式进不去（`ph-class` 只是把类名挂上去，样式不跟随）。
+      所以规格区的输入框**不要标 `tall`**，让它用组件默认档（80rpx），
+      页面这三个类也统一取 `--spec-h`（同样是 80rpx）⇒ 四类控件天然同高。
+      历史备注里的"加高到 92rpx"从来没有真正作用到组件输入框上。 */
+.spec-input {
+  flex: 1; min-width: 0; height: var(--spec-h); line-height: var(--spec-h); padding: 0 24rpx;
+  background: var(--color-surface-2); border-radius: var(--radius-inner);
+  font-size: 30rpx; color: var(--color-text-1); box-sizing: border-box;
+}
+.spec-input.static { color: var(--color-text-2); }
+/* 整页单行输入框（关键词/店铺名/链接/阈值等）—— ⚠️ 同上：这对 ph-input 不生效（见上） */
+.field-control.input, input.field-control {
+  min-height: 96rpx; line-height: 52rpx; padding: 22rpx 24rpx;
+  font-size: 30rpx; border-radius: var(--radius-inner); box-sizing: border-box;
+}
+/* 单位切换按钮组：与输入框同高（取 --spec-h）
+   V128 补 box-sizing —— 否则实高 = height + 上下边框 2rpx */
+.unit-toggle {
+  flex: none; display: inline-flex; height: var(--spec-h); box-sizing: border-box;
+  border: 1rpx solid var(--color-divider); border-radius: var(--radius-inner); overflow: hidden;
+}
+.unit-toggle .ut {
+  display: flex; align-items: center; justify-content: center;
+  min-width: 72rpx; padding: 0 18rpx; font-size: 24rpx;
+  color: var(--color-text-2); background: var(--color-surface-2);
+  border-left: 1rpx solid var(--color-divider);
+}
+.unit-toggle .ut:first-child { border-left: none; }
+.unit-toggle .ut.on { color: var(--color-primary-on); background: var(--color-primary); font-weight: 600; }
+/* 单位后缀：统一与输入框垂直居中 */
+.spec-suffix { flex: none; font-size: 26rpx; color: var(--color-text-2); min-width: 40rpx; }
+/* 幅宽快捷按钮：与输入框同高（取 --spec-h；V128 已补 box-sizing） */
+.quick-btns { flex: none; display: flex; align-items: center; gap: 12rpx; }
+.quick-btn {
+  height: var(--spec-h); line-height: var(--spec-h); padding: 0 22rpx; box-sizing: border-box;
+  background: var(--color-surface-2); color: var(--color-text-2);
+  border: 1rpx solid var(--color-divider); border-radius: var(--radius-inner);
+  font-size: 24rpx;
+}
+.quick-btn.on { background: var(--color-primary-soft); color: var(--color-primary-deep); border-color: var(--color-primary); font-weight: 600; }
+/* 本次总价：用统一结构，并加分隔线 */
+.spec-row-total { margin-top: 8rpx; padding-top: 16rpx; border-top: 1rpx dashed var(--color-divider); }
+.spec-head-tip { font-size: 20rpx; color: var(--color-text-3); flex: 1; }
+.spec-price-hint { font-size: 24rpx; color: var(--color-primary-deep); font-weight: 500; }
+/* 「单位」行：仅非面料渲染（V127。面料单位恒为米 ⇒ 不给选择器）。
+   单位名很短，输入框不必占满整行，限个宽更好看 —— 与 V127 之前的外观保持一致。 */
+.spec-row-unit .spec-body { flex: none; width: 260rpx; }
+/* 「按批估量」行（V127）：独立成行、从卡片最左起 —— 不再与 96rpx 的输入框同排
+   （原生 <switch> 约 62rpx，同排必然高度不齐）；右侧整行留给说明文字，不再截断。
+   间距沿用 .spec-row 的 20rpx，不额外加（V116a 教训：缝别留太大）。
+   ⚠️ 原先的 .spec-batch-inline（flex: none）+ .spec-row-unit 的 max-width 一起删掉了 ——
+      它们正是"把开关与说明硬塞进单位行右侧、把文字挤到截断"的元凶。 */
+.spec-batch-name { font-size: 26rpx; color: var(--color-text-1); white-space: nowrap; }
+/* 关键词放在属性最底部 */
+.field-keywords { margin-top: 24rpx; }
+
+/* 购买平台两级选择 */
+.pf-row { display: flex; align-items: center; gap: 16rpx; margin-bottom: 16rpx; }
+.pf-tag {
+  height: 64rpx; line-height: 64rpx; padding: 0 24rpx;
+  background: var(--color-surface-2); color: var(--color-text-2);
+  border-radius: var(--radius-pill); font-size: 26rpx;
+}
+.pf-picker {
+  height: 64rpx; line-height: 64rpx; padding: 0 24rpx; min-width: 180rpx;
+  background: var(--color-surface-2); color: var(--color-text-1);
+  border-radius: var(--radius-pill); font-size: 26rpx;
+  border: 1rpx solid var(--color-divider);
+}
+.pf-sep { color: var(--color-text-3); font-size: 26rpx; }
+
+/* 商品链接 + 复制 */
+.url-row { display: flex; align-items: center; gap: 16rpx; }
+.url-input { flex: 1; }
+.url-copy {
+  flex: none; height: 64rpx; line-height: 64rpx; padding: 0 24rpx;
+  background: var(--color-primary-soft); color: var(--color-primary-deep);
+  border-radius: var(--radius-pill); font-size: 26rpx; font-weight: 600;
+}

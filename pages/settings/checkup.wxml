@@ -1,0 +1,79 @@
+<!-- pages/settings/checkup.wxml —— 数据体检（对账 + 存储状况） -->
+<!-- V97：主题变量落在页面根节点上（13 个一起给），所有后代自然继承 -->
+<page-meta page-style="{{themeStyle}}"></page-meta>
+<view class="page-wrap">
+
+  <!-- 总览 -->
+  <view class="card">
+    <view class="section-title">账目对账</view>
+    <view class="t-min">检查时间：{{ranAt}}　·　共 {{checked}} 个物料（全部手作空间）</view>
+    <view class="ck-summary">
+      <view class="ck-item">
+        <view class="ck-v {{mismatchCount > 0 ? 'text-danger' : 'text-success'}}">{{mismatchCount}}</view>
+        <view class="ck-k">不一致</view>
+      </view>
+      <view class="ck-item">
+        <view class="ck-v">{{okCount}}</view>
+        <view class="ck-k">账目平</view>
+      </view>
+      <view class="ck-item">
+        <view class="ck-v">{{sumDiff}}</view>
+        <view class="ck-k">差额合计</view>
+      </view>
+    </view>
+    <view class="t-body" wx:if="{{mismatchCount === 0}}">✅ 账目全部对得上：每个物料的库存总值与流水记录完全一致。</view>
+    <view class="t-body text-warning" wx:else>⚠️ 有 {{mismatchCount}} 个物料的账面值与流水对不上。不影响使用，但建议一键修复，让成本和均价回到准确值。</view>
+    <view class="ck-rerun" bindtap="runCheck">↻ 重新体检</view>
+  </view>
+
+  <!-- 不一致明细 -->
+  <view class="card" wx:if="{{mismatchCount > 0}}">
+    <view class="section-title">明细（{{mismatchCount}}）</view>
+    <view class="ck-row ck-head">
+      <text class="ck-name">物料</text><text class="ck-num">账面</text><text class="ck-num">应为</text><text class="ck-num">差额</text>
+    </view>
+    <view class="ck-row" wx:for="{{items}}" wx:key="id">
+      <text class="ck-name">{{item.name}}</text>
+      <text class="ck-num">{{item.cached}}</text>
+      <text class="ck-num">{{item.derived}}</text>
+      <text class="ck-num {{item.diff > 0 ? 'text-danger' : ''}}">{{item.diffText}}</text>
+    </view>
+    <view class="btn btn-primary btn-large btn-block ck-repair" bindtap="doRepair" disabled="{{repairing}}">
+      {{repairing ? '修复中…' : '一键修复（按流水重算）'}}
+    </view>
+  </view>
+
+  <!-- 存储状况 -->
+  <view class="card">
+    <view class="section-title">存储状况</view>
+    <view class="ck-storage">
+      <view class="ck-bar">
+        <view class="ck-bar-fill {{nearFull ? 'ck-bar-warn' : ''}}" style="width:{{usagePercent}}%"></view>
+      </view>
+      <view class="t-min">账本数据 {{usageMB}} MB / {{limitMB}} MB（{{usagePercent}}%）<text wx:if="{{nearFull}}" class="text-warning">　⚠️ 快满了，建议先导出备份</text></view>
+      <view class="t-min">这里统计的是「数据存储」配额（只装账本本身）；图片和备份文件走另一个池（上限 {{fileLimitMB}} MB），见「备份与恢复」。</view>
+    </view>
+    <view class="t-min" wx:if="{{corruption}}">⚠️ 最近检测到一次数据异常读取（键：{{corruption.key}}）。数据已自动降级保护，建议导出备份。</view>
+    <view class="t-min" wx:else>数据读取正常，无异常记录。</view>
+    <view class="btn btn-secondary btn-medium ck-backup" bindtap="goBackup">先去导出备份</view>
+  </view>
+
+  <!-- 待转发的清空备份（两段式流程第二段）。
+       微信要求 wx.shareFileMessage 必须由 TAP 手势直接触发，故转发必须单独一个按钮（见 utils/share.js）。 -->
+  <view class="card" wx:if="{{pendingBackup}}">
+    <view class="section-title">还差最后一步</view>
+    <view class="t-body">备份已生成：{{pendingBackup.name}}</view>
+    <view class="t-min">大小 {{pendingBackup.sizeText}}{{pendingBackup.imagesCount ? '，含图片 ' + pendingBackup.imagesCount + ' 张' : ''}}。请点下面按钮转发到「文件传输助手」保存，转发成功后才会清空。</view>
+    <view class="btn btn-primary btn-medium btn-block ck-backup" bindtap="onShareBackup">转发备份到微信</view>
+    <view class="btn btn-secondary btn-medium btn-block ck-backup" bindtap="cancelPending">暂不清空</view>
+  </view>
+
+  <!-- 预设 -->
+  <view class="card">
+    <view class="section-title">预设</view>
+    <view class="t-min">预设（默认手作空间/物料分类/单位/平台）被误删了？点下面一键找回，不影响任何数据。</view>
+    <view class="btn btn-secondary btn-medium ck-backup" bindtap="restorePresets">恢复出厂预设</view>
+    <view class="btn btn-secondary btn-medium ck-backup" bindtap="doClear">清空本地数据（恢复出厂）</view>
+  </view>
+
+</view>

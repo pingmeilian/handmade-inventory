@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "成品出入库",
+  "usingComponents": {
+    "line-chart": "/components/line-chart/line-chart",
+    "ph-input": "/components/ph-input/ph-input",
+    "date-picker-sheet": "/components/date-picker-sheet/date-picker-sheet"
+  }
+}
